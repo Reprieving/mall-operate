@@ -10,7 +10,15 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
+import {
+  adminLoginApi,
+  adminLogoutApi,
+  getAccessCodesApi,
+  getAdminInfoApi,
+  getUserInfoApi,
+  loginApi,
+  logoutApi,
+} from '#/api';
 import { $t } from '#/locales';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -29,23 +37,49 @@ export const useAuthStore = defineStore('auth', () => {
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
   ) {
-    // 异步处理用户登录操作并获取 accessToken
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
+      let accessToken = '';
+      let accessCodes: string[] = [];
 
-      // 如果成功获取到 accessToken
+      try {
+        // 优先对接平台运营管理员登录接口
+        const adminRes = await adminLoginApi({
+          username: params.username,
+          password: params.password,
+        });
+        accessToken = adminRes.token;
+        accessCodes = adminRes.permissions || ['*:*:*'];
+        userInfo = {
+          avatar:
+            adminRes.avatar ||
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+          desc: 'Platform Administrator',
+          homePath: preferences.app.defaultHomePath,
+          realName: adminRes.nickname || adminRes.username,
+          roles: [adminRes.roleCode || 'admin'],
+          token: accessToken,
+          userId: String(adminRes.id),
+          username: adminRes.username,
+        };
+      } catch {
+        // 后备使用基础登录接口 (用于开发环境或本地Mock)
+        const baseRes = await loginApi(params);
+        accessToken = baseRes.accessToken;
+      }
+
       if (accessToken) {
         accessStore.setAccessToken(accessToken);
 
-        // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
-        ]);
-
-        userInfo = fetchUserInfoResult;
+        if (!userInfo) {
+          const [fetchUserInfoResult, codes] = await Promise.all([
+            fetchUserInfo(),
+            getAccessCodesApi().catch(() => ['*:*:*']),
+          ]);
+          userInfo = fetchUserInfoResult;
+          accessCodes = codes;
+        }
 
         userStore.setUserInfo(userInfo);
         accessStore.setAccessCodes(accessCodes);
@@ -56,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
           onSuccess
             ? await onSuccess?.()
             : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
+                userInfo?.homePath || preferences.app.defaultHomePath,
               );
         }
 
@@ -79,9 +113,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout(redirect: boolean = true) {
     try {
-      await logoutApi();
+      await adminLogoutApi();
     } catch {
-      // 不做任何处理
+      try {
+        await logoutApi();
+      } catch {
+        // 不做任何处理
+      }
     }
     resetAllStores();
     accessStore.setLoginExpired(false);
@@ -98,7 +136,27 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchUserInfo() {
-    const userInfo = await getUserInfoApi();
+    let userInfo: UserInfo;
+    try {
+      const adminInfo = await getAdminInfoApi();
+      userInfo = {
+        avatar:
+          adminInfo.avatar ||
+          'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+        desc: 'Platform Administrator',
+        homePath: preferences.app.defaultHomePath,
+        realName: adminInfo.nickname || adminInfo.username,
+        roles: [adminInfo.roleCode || 'admin'],
+        token: '',
+        userId: String(adminInfo.id),
+        username: adminInfo.username,
+      };
+      if (adminInfo.permissions) {
+        accessStore.setAccessCodes(adminInfo.permissions);
+      }
+    } catch {
+      userInfo = await getUserInfoApi();
+    }
     userStore.setUserInfo(userInfo);
     return userInfo;
   }

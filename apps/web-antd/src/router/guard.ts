@@ -91,9 +91,23 @@ function setupAccessGuard(router: Router) {
     }
 
     // 生成路由表
+    let userInfo = userStore.userInfo;
+    try {
+      if (!userInfo) {
+        userInfo = await authStore.fetchUserInfo();
+      }
+    } catch (error) {
+      console.warn('获取用户信息失败，即将重置登录状态并跳转登录页:', error);
+      accessStore.setAccessToken(null);
+      return {
+        path: LOGIN_PATH,
+        query: { redirect: encodeURIComponent(to.fullPath) },
+        replace: true,
+      };
+    }
+
     // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
-    const userRoles = userInfo.roles ?? [];
+    const userRoles = userInfo?.roles ?? [];
 
     // 生成菜单和路由
     const { accessibleMenus, accessibleRoutes } = await generateAccess({
@@ -109,7 +123,7 @@ function setupAccessGuard(router: Router) {
     accessStore.setIsAccessChecked(true);
     const redirectPath = (from.query.redirect ??
       (to.path === preferences.app.defaultHomePath
-        ? userInfo.homePath || preferences.app.defaultHomePath
+        ? userInfo?.homePath || preferences.app.defaultHomePath
         : to.fullPath)) as string;
 
     return {

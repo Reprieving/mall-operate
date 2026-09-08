@@ -19,7 +19,8 @@ interface WebAntdPreferencesExtension {
 export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
-    name: import.meta.env.VITE_APP_TITLE,
+    defaultHomePath: '/dashboard/overview',
+    name: '商城运营管理平台',
   },
   copyright: appCopyrightPreferences,
 });

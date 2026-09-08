@@ -7,17 +7,26 @@ const routes: RouteRecordRaw[] = [
     meta: {
       icon: 'lucide:layout-dashboard',
       order: -1,
-      title: $t('page.dashboard.title'),
+      title: '运营大盘',
     },
     name: 'Dashboard',
     path: '/dashboard',
     children: [
       {
+        name: 'MallOverview',
+        path: 'overview',
+        component: () => import('#/views/dashboard/overview/index.vue'),
+        meta: {
+          affixTab: true,
+          icon: 'lucide:gauge',
+          title: '运营工作台',
+        },
+      },
+      {
         name: 'Analytics',
         path: 'analytics',
         component: () => import('#/views/dashboard/analytics/index.vue'),
         meta: {
-          affixTab: true,
           icon: 'lucide:area-chart',
           title: $t('page.dashboard.analytics'),
         },

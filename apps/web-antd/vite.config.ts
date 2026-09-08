@@ -8,9 +8,9 @@ export default defineConfig(async () => {
         proxy: {
           '/api': {
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api/, ''),
-            // mock代理目标地址
-            target: 'http://localhost:5320/api',
+            // 保持 /api 前缀，直接转发给后端的 /api 接口
+            rewrite: (path) => path,
+            target: 'http://localhost:8080',
             ws: true,
           },
         },
