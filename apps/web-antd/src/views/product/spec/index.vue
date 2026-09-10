@@ -8,12 +8,15 @@ import { Page } from '@vben/common-ui';
 import {
   Button,
   Card,
+  Col,
   Form,
   Input,
   InputNumber,
   message,
   Modal,
   Popconfirm,
+  Row,
+  Select,
   Space,
   Table,
   Tag,
@@ -32,12 +35,16 @@ const loading = ref(false);
 const specKeys = ref<SpecKeyVO[]>([]);
 const total = ref(0);
 
-const queryForm = ref<SpecKeyQueryDTO>({
-  name: '',
-  pageNum: 1,
-  pageSize: 10,
-  status: undefined,
-});
+const queryForm = ref<SpecKeyQueryDTO & { categoryName?: string; id?: number }>(
+  {
+    categoryName: '',
+    id: undefined,
+    name: '',
+    pageNum: 1,
+    pageSize: 10,
+    status: undefined,
+  },
+);
 
 // 新增/编辑规格项弹窗
 const modalVisible = ref(false);
@@ -107,8 +114,27 @@ async function fetchData() {
       specKeys.value = res.list;
       total.value = res.total;
     } else {
-      specKeys.value = fallbackSpecKeys;
-      total.value = fallbackSpecKeys.length;
+      let filtered = [...fallbackSpecKeys];
+      if (queryForm.value.name) {
+        const nameVal = queryForm.value.name.toLowerCase();
+        filtered = filtered.filter((s) =>
+          s.name.toLowerCase().includes(nameVal),
+        );
+      }
+      if (queryForm.value.categoryName) {
+        const catVal = queryForm.value.categoryName.toLowerCase();
+        filtered = filtered.filter((s) =>
+          s.categoryName?.toLowerCase().includes(catVal),
+        );
+      }
+      if (queryForm.value.status !== undefined) {
+        filtered = filtered.filter((s) => s.status === queryForm.value.status);
+      }
+      if (queryForm.value.id !== undefined) {
+        filtered = filtered.filter((s) => s.id === queryForm.value.id);
+      }
+      specKeys.value = filtered;
+      total.value = filtered.length;
     }
   } catch {
     specKeys.value = fallbackSpecKeys;
@@ -116,6 +142,15 @@ async function fetchData() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleReset() {
+  queryForm.value.name = '';
+  queryForm.value.categoryName = '';
+  queryForm.value.status = undefined;
+  queryForm.value.id = undefined;
+  queryForm.value.pageNum = 1;
+  fetchData();
 }
 
 function handleAddKey() {
@@ -254,24 +289,55 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page
-    description="维护规格属性项（如颜色、尺码、容量）与多级类目模板绑定，支持规格值的快速与批量录入"
-    title="规格属性模板管理"
-  >
-    <Card class="mb-4 shadow-sm" :body-style="{ padding: '16px 24px' }">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
+  <Page>
+    <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.name"
             allow-clear
-            class="w-56"
-            placeholder="规格项名称检索"
+            class="w-full"
+            placeholder="规格项名称检索 (如: 颜色/尺码)"
             @press-enter="fetchData"
           />
-          <Button type="primary" @click="fetchData">查询</Button>
-        </div>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.categoryName"
+            allow-clear
+            class="w-full"
+            placeholder="关联分类名称检索"
+            @press-enter="fetchData"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.status"
+            allow-clear
+            class="w-full"
+            placeholder="规格启用状态检索"
+          >
+            <Select.Option :value="1">正常启用</Select.Option>
+            <Select.Option :value="0">已禁用</Select.Option>
+          </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <InputNumber
+            v-model:value="queryForm.id"
+            class="w-full"
+            placeholder="规格项 ID 检索"
+          />
+        </Col>
+      </Row>
 
-        <Button type="primary" @click="handleAddKey"> 新建规格项 </Button>
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="fetchData">查询</Button>
+          <Button @click="handleReset">重置</Button>
+        </div>
+        <Button type="primary" @click="handleAddKey">+ 新建规格项</Button>
       </div>
     </Card>
 
@@ -374,7 +440,7 @@ onMounted(() => {
       :title="`向 [${currentKey?.name}] 追加规格属性值`"
       @ok="handleSaveValues"
     >
-      <div class="mb-3 text-xs text-gray-500">
+      <div class="mb-3 text-xs text-gray-300">
         支持一次性批量录入多个规格取值，多个可用中英文逗号或回车换行区分：
       </div>
       <Input.TextArea
@@ -385,3 +451,14 @@ onMounted(() => {
     </Modal>
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>

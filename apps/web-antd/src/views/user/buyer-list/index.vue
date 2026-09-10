@@ -9,10 +9,12 @@ import {
   Avatar,
   Button,
   Card,
+  Col,
   Input,
   message,
   Modal,
   Popconfirm,
+  Row,
   Select,
   Space,
   Switch,
@@ -31,10 +33,14 @@ import UserDetailDrawer from './modules/user-detail-drawer.vue';
 const loading = ref(false);
 const users = ref<UserVO[]>([]);
 const total = ref(0);
-const queryForm = ref<AdminUserQueryDTO>({
+const queryForm = ref<
+  AdminUserQueryDTO & { certStatus?: number; phone?: string }
+>({
+  certStatus: undefined,
   keyword: '',
   pageNum: 1,
   pageSize: 10,
+  phone: '',
   status: undefined,
 });
 
@@ -99,8 +105,30 @@ async function fetchData() {
       users.value = res.list;
       total.value = res.total;
     } else {
-      users.value = fallbackUsers;
-      total.value = fallbackUsers.length;
+      let filtered = [...fallbackUsers];
+      if (queryForm.value.keyword) {
+        const kw = queryForm.value.keyword.toLowerCase();
+        filtered = filtered.filter(
+          (u) =>
+            u.username.toLowerCase().includes(kw) ||
+            (u.nickname && u.nickname.toLowerCase().includes(kw)) ||
+            (u.email && u.email.toLowerCase().includes(kw)),
+        );
+      }
+      if (queryForm.value.phone) {
+        const ph = queryForm.value.phone;
+        filtered = filtered.filter((u) => u.phone.includes(ph));
+      }
+      if (queryForm.value.status !== undefined) {
+        filtered = filtered.filter((u) => u.status === queryForm.value.status);
+      }
+      if (queryForm.value.certStatus !== undefined) {
+        filtered = filtered.filter(
+          (u) => u.certStatus === queryForm.value.certStatus,
+        );
+      }
+      users.value = filtered;
+      total.value = filtered.length;
     }
   } catch {
     users.value = fallbackUsers;
@@ -117,7 +145,9 @@ function handleSearch() {
 
 function handleReset() {
   queryForm.value.keyword = '';
+  queryForm.value.phone = '';
   queryForm.value.status = undefined;
+  queryForm.value.certStatus = undefined;
   queryForm.value.pageNum = 1;
   fetchData();
 }
@@ -150,7 +180,7 @@ function handleResetPwd(row: any) {
       h('div', [
         h(
           'div',
-          { class: 'mb-2 text-gray-600 text-sm' },
+          { class: 'mb-2 text-gray-300 text-sm' },
           `为买家 [${row.nickname || row.username}] 设置新登录密码：`,
         ),
         h(Input.Password, {
@@ -238,30 +268,56 @@ fetchData();
 </script>
 
 <template>
-  <Page
-    description="支持按用户名、邮箱、手机号多维检索买家，可查看买家消费画像、收货地址，并执行封禁与重置密码"
-    title="买家用户管控"
-  >
+  <Page>
     <!-- 筛选过滤栏 -->
     <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.keyword"
             allow-clear
-            class="w-64"
-            placeholder="搜索用户名/昵称/手机/邮箱"
+            class="w-full"
+            placeholder="搜索用户名/昵称/邮箱"
             @press-enter="handleSearch"
           />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.phone"
+            allow-clear
+            class="w-full"
+            placeholder="买家手机号码检索"
+            @press-enter="handleSearch"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Select
             v-model:value="queryForm.status"
             allow-clear
-            class="w-36"
-            placeholder="账号状态"
+            class="w-full"
+            placeholder="账号状态检索"
           >
             <Select.Option :value="1">正常状态</Select.Option>
             <Select.Option :value="0">冻结封禁</Select.Option>
           </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.certStatus"
+            allow-clear
+            class="w-full"
+            placeholder="实名认证状态检索"
+          >
+            <Select.Option :value="1">已实名认证</Select.Option>
+            <Select.Option :value="0">未实名认证</Select.Option>
+          </Select>
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
           <Button type="primary" @click="handleSearch">查询</Button>
           <Button @click="handleReset">重置</Button>
         </div>
@@ -292,10 +348,10 @@ fetchData();
             <div class="flex items-center gap-3">
               <Avatar :src="record.avatar" />
               <div>
-                <div class="font-medium text-gray-800">
+                <div class="font-medium text-white">
                   {{ record.nickname || record.username }}
                 </div>
-                <div class="text-xs text-gray-400">
+                <div class="text-xs text-gray-300">
                   账号: {{ record.username }}
                 </div>
               </div>
@@ -356,3 +412,14 @@ fetchData();
     <DetailDrawer />
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>

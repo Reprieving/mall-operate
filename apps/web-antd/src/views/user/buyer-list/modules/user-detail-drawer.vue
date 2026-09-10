@@ -122,11 +122,13 @@ async function loadDetail(userId: number) {
     <Spin :spinning="loading">
       <div v-if="detail" class="space-y-4">
         <!-- 头部用户核心名片 -->
-        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border">
+        <div
+          class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+        >
           <Avatar :size="64" :src="detail.profile?.avatar" />
           <div class="flex-1">
             <div class="flex items-center gap-2">
-              <span class="text-lg font-bold text-gray-800">{{
+              <span class="text-lg font-bold text-gray-900">{{
                 detail.profile?.nickname || detail.profile?.username
               }}</span>
               <Tag :color="detail.profile?.status === 1 ? 'success' : 'error'">
@@ -138,20 +140,33 @@ async function loadDetail(userId: number) {
                 {{ detail.profile?.certStatus === 1 ? '已实名认证' : '未实名' }}
               </Tag>
             </div>
-            <div class="text-xs text-gray-500 mt-1 flex gap-4">
-              <span>用户ID: {{ detail.profile?.id }}</span>
-              <span>用户名: {{ detail.profile?.username }}</span>
-              <span>手机: {{ detail.profile?.phone || '-' }}</span>
-              <span>邮箱: {{ detail.profile?.email || '-' }}</span>
+            <div class="text-xs text-gray-600 mt-1 flex flex-wrap gap-4">
+              <span>用户ID:
+                <span class="text-gray-800 font-medium">{{
+                  detail.profile?.id
+                }}</span></span>
+              <span>用户名:
+                <span class="text-gray-800 font-medium">{{
+                  detail.profile?.username
+                }}</span></span>
+              <span>手机:
+                <span class="text-gray-800 font-medium">{{
+                  detail.profile?.phone || '-'
+                }}</span></span>
+              <span>邮箱:
+                <span class="text-gray-800 font-medium">{{
+                  detail.profile?.email || '-'
+                }}</span></span>
             </div>
           </div>
-          <div class="text-right border-l pl-4">
-            <div class="text-xs text-gray-400">历史累计消费</div>
+          <div class="text-right border-l border-gray-200 pl-4">
+            <div class="text-xs text-gray-500">历史累计消费</div>
             <div class="text-xl font-bold text-blue-600 mt-0.5">
               ¥{{ detail.totalSpent?.toFixed(2) }}
             </div>
             <div class="text-xs text-gray-500 mt-1">
-              完成订单: <strong>{{ detail.orderCount }}</strong> 笔
+              完成订单:
+              <strong class="text-gray-900">{{ detail.orderCount }}</strong> 笔
             </div>
           </div>
         </div>
@@ -249,18 +264,18 @@ async function loadDetail(userId: number) {
           <Tabs.TabPane key="3" tab="名下店铺">
             <div
               v-if="detail.shop"
-              class="p-3 bg-gray-50 border rounded-lg flex items-center justify-between"
+              class="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between"
             >
               <div class="flex items-center gap-3">
                 <Avatar :size="48" :src="detail.shop.logo" shape="square" />
                 <div>
-                  <div class="font-bold text-gray-800">
+                  <div class="font-bold text-gray-900">
                     {{ detail.shop.name }}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
                     <span>类型: {{ detail.shop.typeName }}</span> &nbsp;|&nbsp;
                     <span>综合评分:
-                      <strong class="text-amber-500">{{
+                      <strong class="text-amber-600">{{
                         detail.shop.score
                       }}</strong></span>
                   </div>
@@ -282,21 +297,21 @@ async function loadDetail(userId: number) {
               <div
                 v-for="addr in detail.addresses"
                 :key="addr.id"
-                class="p-3 border rounded-lg flex justify-between items-start"
+                class="p-3 border border-gray-200 rounded-lg flex justify-between items-start"
                 :class="{
-                  'border-blue-400 bg-blue-50/20': addr.isDefault === 1,
+                  'border-blue-400 bg-blue-50/30': addr.isDefault === 1,
                 }"
               >
                 <div>
                   <div
-                    class="flex items-center gap-2 font-medium text-gray-800"
+                    class="flex items-center gap-2 font-medium text-gray-900"
                   >
                     <span>{{ addr.name }}</span>
                     <span>{{ addr.phone }}</span>
                     <Tag v-if="addr.isDefault === 1" color="blue">默认地址</Tag>
                     <Tag v-if="addr.tag" color="cyan">{{ addr.tag }}</Tag>
                   </div>
-                  <div class="text-xs text-gray-500 mt-1">
+                  <div class="text-xs text-gray-600 mt-1">
                     {{
                       addr.fullAddress ||
                       `${addr.province}${addr.city}${addr.district}${addr.detailAddress}`

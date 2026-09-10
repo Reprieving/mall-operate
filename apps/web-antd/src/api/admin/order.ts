@@ -49,7 +49,7 @@ export async function updateOrderRemarkApi(
  * 订单发货录入物流
  */
 export async function deliveryOrderApi(id: number, data: OrderDeliveryDTO) {
-  return requestClient.post<OrderVO>(`/order/admin/${id}/delivery`, data);
+  return requestClient.post<OrderVO>(`/api/order/admin/${id}/delivery`, data);
 }
 
 /**
@@ -59,21 +59,25 @@ export async function updateReceiverInfoApi(
   id: number,
   data: OrderReceiverUpdateDTO,
 ) {
-  return requestClient.put<OrderVO>(`/order/admin/${id}/receiver`, data);
+  return requestClient.put<OrderVO>(`/api/order/admin/${id}/receiver`, data);
 }
 
 /**
  * 后台关闭/售后退款订单
  */
 export async function closeOrderApi(id: number, reason?: string) {
-  return requestClient.post<OrderVO>(`/order/admin/${id}/close`, undefined, {
-    params: { reason },
-  });
+  return requestClient.post<OrderVO>(
+    `/api/order/admin/${id}/close`,
+    undefined,
+    {
+      params: { reason },
+    },
+  );
 }
 
 /**
  * 后台强制取消订单
  */
 export async function adminCancelOrderApi(id: number, data: OrderCancelDTO) {
-  return requestClient.post<OrderVO>(`/order/admin/${id}/cancel`, data);
+  return requestClient.post<OrderVO>(`/api/order/admin/${id}/cancel`, data);
 }

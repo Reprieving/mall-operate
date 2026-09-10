@@ -188,7 +188,7 @@ const itemColumns = [
       <div v-if="detail" class="space-y-4">
         <!-- 订单状态顶栏 -->
         <div
-          class="flex items-center justify-between p-4 bg-gray-50 border rounded-lg"
+          class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg"
         >
           <div>
             <div class="flex items-center gap-3">
@@ -214,13 +214,19 @@ const itemColumns = [
                 紫旗特殊
               </Tag>
             </div>
-            <div class="text-xs text-gray-500 mt-1 flex gap-4">
-              <span>下单时间: {{ detail.orderInfo.createTime }}</span>
-              <span v-if="detail.orderInfo.paymentTime">支付时间: {{ detail.orderInfo.paymentTime }}</span>
+            <div class="text-xs text-gray-600 mt-1 flex gap-4">
+              <span>下单时间:
+                <span class="text-gray-800 font-medium">{{
+                  detail.orderInfo.createTime
+                }}</span></span>
+              <span v-if="detail.orderInfo.paymentTime">支付时间:
+                <span class="text-gray-800 font-medium">{{
+                  detail.orderInfo.paymentTime
+                }}</span></span>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-xs text-gray-400">应付 / 实付款</div>
+            <div class="text-xs text-gray-500">应付 / 实付款</div>
             <div class="text-2xl font-bold text-red-500 mt-0.5">
               ¥{{ detail.orderInfo.payAmount?.toFixed(2) }}
             </div>
@@ -271,55 +277,55 @@ const itemColumns = [
         <Row :gutter="16">
           <Col :span="12">
             <Card title="收件与配送信息" size="small" class="h-full">
-              <div class="text-sm space-y-1.5 text-gray-700">
+              <div class="text-sm space-y-1.5 text-white">
                 <div>
-                  <span class="text-gray-400">收货人：</span><strong>{{ detail.orderInfo.receiverName }}</strong> ({{
+                  <span class="text-gray-300">收货人：</span><strong>{{ detail.orderInfo.receiverName }}</strong> ({{
                     detail.orderInfo.receiverPhone
                   }})
                 </div>
                 <div>
-                  <span class="text-gray-400">详细地址：</span>{{ detail.orderInfo.receiverProvince
+                  <span class="text-gray-300">详细地址：</span>{{ detail.orderInfo.receiverProvince
                   }}{{ detail.orderInfo.receiverCity
                   }}{{ detail.orderInfo.receiverDistrict
                   }}{{ detail.orderInfo.receiverDetailAddress }}
                 </div>
                 <Divider class="my-2" />
                 <div>
-                  <span class="text-gray-400">承运物流：</span>{{ detail.orderInfo.deliveryCompany || '未录入物流' }}
+                  <span class="text-gray-300">承运物流：</span>{{ detail.orderInfo.deliveryCompany || '未录入物流' }}
                 </div>
                 <div>
-                  <span class="text-gray-400">快递单号：</span><strong class="text-blue-600">{{
+                  <span class="text-gray-300">快递单号：</span><strong class="text-blue-400">{{
                     detail.orderInfo.deliverySn || '暂无运单'
                   }}</strong>
                 </div>
                 <div v-if="detail.orderInfo.note">
-                  <span class="text-gray-400">买家留言：</span>{{ detail.orderInfo.note }}
+                  <span class="text-gray-300">买家留言：</span>{{ detail.orderInfo.note }}
                 </div>
               </div>
             </Card>
           </Col>
           <Col :span="12">
             <Card title="买家与商户画像" size="small" class="h-full">
-              <div class="text-sm space-y-1.5 text-gray-700">
+              <div class="text-sm space-y-1.5 text-white">
                 <div>
-                  <span class="text-gray-400">买家账号：</span>{{ detail.buyer?.username }} ({{
+                  <span class="text-gray-300">买家账号：</span>{{ detail.buyer?.username }} ({{
                     detail.buyer?.nickname || '-'
                   }})
                 </div>
                 <div>
-                  <span class="text-gray-400">买家电话：</span>{{ detail.buyer?.phone || '-' }}
+                  <span class="text-gray-300">买家电话：</span>{{ detail.buyer?.phone || '-' }}
                 </div>
                 <Divider class="my-2" />
                 <div>
-                  <span class="text-gray-400">所属商户：</span><strong class="text-blue-600">{{
+                  <span class="text-gray-300">所属商户：</span><strong class="text-blue-400">{{
                     detail.shop?.name || '平台自营'
                   }}</strong>
                 </div>
                 <div>
-                  <span class="text-gray-400">商户电话：</span>{{ detail.shop?.phone || '-' }}
+                  <span class="text-gray-300">商户电话：</span>{{ detail.shop?.phone || '-' }}
                 </div>
                 <div>
-                  <span class="text-gray-400">支付方式：</span>{{
+                  <span class="text-gray-300">支付方式：</span>{{
                     detail.orderInfo.payType === 1
                       ? '微信支付'
                       : detail.orderInfo.payType === 2
@@ -351,13 +357,13 @@ const itemColumns = [
               </template>
               <template v-else-if="column.key === 'name'">
                 <div>
-                  <div class="font-medium text-gray-800">
+                  <div class="font-medium text-white">
                     {{ record.spuName }}
                   </div>
-                  <div class="text-xs text-gray-400 mt-0.5">
+                  <div class="text-xs text-gray-300 mt-0.5">
                     规格: {{ record.specData }}
                   </div>
-                  <div class="text-xs text-gray-400">
+                  <div class="text-xs text-gray-300">
                     SKU 编码: {{ record.skuCode }}
                   </div>
                 </div>
@@ -366,7 +372,7 @@ const itemColumns = [
                 <span>¥{{ record.skuPrice }}</span>
               </template>
               <template v-else-if="column.key === 'subtotalAmount'">
-                <strong class="text-red-500">¥{{ record.subtotalAmount }}</strong>
+                <strong class="text-red-400">¥{{ record.subtotalAmount }}</strong>
               </template>
             </template>
           </Table>
@@ -387,7 +393,7 @@ const itemColumns = [
                 <span class="text-xs text-gray-400">({{ log.time }})</span>
               </div>
               <div class="text-xs text-gray-600 mt-0.5">{{ log.detail }}</div>
-              <div class="text-xs text-gray-400 mt-0.5">
+              <div class="text-xs text-gray-500 mt-0.5">
                 经手人: {{ log.operator }}
               </div>
             </Timeline.Item>

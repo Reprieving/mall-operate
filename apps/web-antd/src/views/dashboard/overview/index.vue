@@ -174,17 +174,17 @@ onMounted(() => {
           >
             <div class="flex items-center justify-between">
               <div>
-                <div class="text-xs text-gray-500 font-medium">
+                <div class="text-xs text-gray-300 font-medium">
                   待审核实名认证
                 </div>
-                <div class="text-2xl font-bold text-blue-600 mt-1">
+                <div class="text-2xl font-bold text-blue-400 mt-1">
                   {{ todosData.pendingCertCount }}
-                  <span class="text-xs text-gray-400 font-normal">单</span>
+                  <span class="text-xs text-gray-300 font-normal">单</span>
                 </div>
               </div>
               <Badge :count="todosData.pendingCertCount" :overflow-count="99">
                 <div
-                  class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 font-bold"
+                  class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold"
                 >
                   审
                 </div>
@@ -201,17 +201,17 @@ onMounted(() => {
           >
             <div class="flex items-center justify-between">
               <div>
-                <div class="text-xs text-gray-500 font-medium">
+                <div class="text-xs text-gray-300 font-medium">
                   待审批开店申请
                 </div>
-                <div class="text-2xl font-bold text-purple-600 mt-1">
+                <div class="text-2xl font-bold text-purple-400 mt-1">
                   {{ todosData.pendingShopCount }}
-                  <span class="text-xs text-gray-400 font-normal">家</span>
+                  <span class="text-xs text-gray-300 font-normal">家</span>
                 </div>
               </div>
               <Badge :count="todosData.pendingShopCount" :overflow-count="99">
                 <div
-                  class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 font-bold"
+                  class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold"
                 >
                   店
                 </div>
@@ -228,12 +228,12 @@ onMounted(() => {
           >
             <div class="flex items-center justify-between">
               <div>
-                <div class="text-xs text-gray-500 font-medium">
+                <div class="text-xs text-gray-300 font-medium">
                   待履约发货订单
                 </div>
-                <div class="text-2xl font-bold text-amber-600 mt-1">
+                <div class="text-2xl font-bold text-amber-400 mt-1">
                   {{ todosData.pendingDeliverCount }}
-                  <span class="text-xs text-gray-400 font-normal">笔</span>
+                  <span class="text-xs text-gray-300 font-normal">笔</span>
                 </div>
               </div>
               <Badge
@@ -241,7 +241,7 @@ onMounted(() => {
                 :overflow-count="99"
               >
                 <div
-                  class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 font-bold"
+                  class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold"
                 >
                   单
                 </div>
@@ -258,12 +258,12 @@ onMounted(() => {
           >
             <div class="flex items-center justify-between">
               <div>
-                <div class="text-xs text-gray-500 font-medium">
+                <div class="text-xs text-gray-300 font-medium">
                   库存告急警戒商品
                 </div>
-                <div class="text-2xl font-bold text-red-600 mt-1">
+                <div class="text-2xl font-bold text-red-400 mt-1">
                   {{ todosData.lowStockProductCount }}
-                  <span class="text-xs text-gray-400 font-normal">件</span>
+                  <span class="text-xs text-gray-300 font-normal">件</span>
                 </div>
               </div>
               <Badge
@@ -291,13 +291,13 @@ onMounted(() => {
               :precision="2"
               :value-style="{ color: '#1677ff', fontWeight: 'bold' }"
             />
-            <div class="mt-2 text-xs text-gray-400 flex justify-between">
+            <div class="mt-2 text-xs text-gray-300 flex justify-between">
               <span>今日实付流水</span>
-              <span class="text-gray-700 font-medium">¥{{ overviewData.todayPayAmount?.toFixed(2) }}</span>
+              <span class="text-white font-medium">¥{{ overviewData.todayPayAmount?.toFixed(2) }}</span>
             </div>
-            <div class="mt-1 text-xs text-gray-400 flex justify-between">
+            <div class="mt-1 text-xs text-gray-300 flex justify-between">
               <span>平台累计 GMV</span>
-              <span class="text-gray-700 font-medium">¥{{ overviewData.totalGmv?.toLocaleString() }}</span>
+              <span class="text-white font-medium">¥{{ overviewData.totalGmv?.toLocaleString() }}</span>
             </div>
           </Card>
         </Col>
@@ -309,13 +309,13 @@ onMounted(() => {
               :value="overviewData.todayOrderCount"
               :value-style="{ color: '#52c41a', fontWeight: 'bold' }"
             />
-            <div class="mt-2 text-xs text-gray-400 flex justify-between">
+            <div class="mt-2 text-xs text-gray-300 flex justify-between">
               <span>今日客单价 (AOV)</span>
-              <span class="text-gray-700 font-medium">¥{{ overviewData.todayAov?.toFixed(2) }}</span>
+              <span class="text-white font-medium">¥{{ overviewData.todayAov?.toFixed(2) }}</span>
             </div>
-            <div class="mt-1 text-xs text-gray-400 flex justify-between">
+            <div class="mt-1 text-xs text-gray-300 flex justify-between">
               <span>平台累计订单数</span>
-              <span class="text-gray-700 font-medium">{{ overviewData.totalOrders?.toLocaleString() }} 笔</span>
+              <span class="text-white font-medium">{{ overviewData.totalOrders?.toLocaleString() }} 笔</span>
             </div>
           </Card>
         </Col>
@@ -327,13 +327,13 @@ onMounted(() => {
               :value="overviewData.todayNewUsers"
               :value-style="{ color: '#fa8c16', fontWeight: 'bold' }"
             />
-            <div class="mt-2 text-xs text-gray-400 flex justify-between">
+            <div class="mt-2 text-xs text-gray-300 flex justify-between">
               <span>注册用户总数</span>
-              <span class="text-gray-700 font-medium">{{ overviewData.totalUsers?.toLocaleString() }} 人</span>
+              <span class="text-white font-medium">{{ overviewData.totalUsers?.toLocaleString() }} 人</span>
             </div>
-            <div class="mt-1 text-xs text-gray-400 flex justify-between">
+            <div class="mt-1 text-xs text-gray-300 flex justify-between">
               <span>活跃入驻商户</span>
-              <span class="text-gray-700 font-medium">{{ overviewData.totalShops }} 家</span>
+              <span class="text-white font-medium">{{ overviewData.totalShops }} 家</span>
             </div>
           </Card>
         </Col>
@@ -380,12 +380,12 @@ onMounted(() => {
                 class="border-b pb-2 last:border-b-0"
               >
                 <div class="flex justify-between items-center mb-1 text-sm">
-                  <span class="font-medium text-gray-700 w-16">{{ date }}</span>
-                  <span class="text-xs text-gray-500">
+                  <span class="font-medium text-white w-16">{{ date }}</span>
+                  <span class="text-xs text-gray-300">
                     流水:
-                    <strong class="text-blue-600">¥{{ trendData.gmvList[idx]?.toLocaleString() }}</strong>
+                    <strong class="text-blue-400">¥{{ trendData.gmvList[idx]?.toLocaleString() }}</strong>
                     &nbsp;|&nbsp; 订单:
-                    <strong class="text-green-600">{{
+                    <strong class="text-green-400">{{
                       trendData.orderCountList[idx]
                     }}</strong>
                     笔
@@ -430,10 +430,10 @@ onMounted(() => {
             <div class="space-y-4 pt-1">
               <div v-for="cat in categoryRatios" :key="cat.categoryId">
                 <div class="flex justify-between items-center mb-1 text-sm">
-                  <span class="font-medium text-gray-700">{{
+                  <span class="font-medium text-white">{{
                     cat.categoryName
                   }}</span>
-                  <span class="text-gray-500 text-xs">¥{{ cat.salesAmount?.toLocaleString() }} ({{
+                  <span class="text-gray-300 text-xs">¥{{ cat.salesAmount?.toLocaleString() }} ({{
                       cat.ratio
                     }}%)</span>
                 </div>
@@ -459,7 +459,7 @@ onMounted(() => {
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm border-collapse">
             <thead>
-              <tr class="border-b text-gray-500">
+              <tr class="border-b text-gray-300">
                 <th class="py-2.5 px-3 w-16 text-center">排名</th>
                 <th class="py-2.5 px-3">商品信息</th>
                 <th class="py-2.5 px-3 w-32 text-right">总销量 (件)</th>
@@ -471,7 +471,7 @@ onMounted(() => {
               <tr
                 v-for="(item, index) in topProducts"
                 :key="item.spuId"
-                class="border-b hover:bg-gray-50 transition-colors"
+                class="border-b hover:bg-white/5 transition-colors"
               >
                 <td class="py-3 px-3 text-center">
                   <span
@@ -480,7 +480,7 @@ onMounted(() => {
                       'bg-amber-500 text-white': index === 0,
                       'bg-slate-400 text-white': index === 1,
                       'bg-amber-700 text-white': index === 2,
-                      'bg-gray-100 text-gray-600': index > 2,
+                      'bg-zinc-700 text-white': index > 2,
                     }"
                   >
                     {{ index + 1 }}
@@ -494,19 +494,19 @@ onMounted(() => {
                       class="w-11 h-11 rounded object-cover border"
                     />
                     <div>
-                      <div class="font-medium text-gray-800 line-clamp-1">
+                      <div class="font-medium text-white line-clamp-1">
                         {{ item.spuName }}
                       </div>
-                      <div class="text-xs text-gray-400 mt-0.5">
+                      <div class="text-xs text-gray-300 mt-0.5">
                         SPU ID: {{ item.spuId }}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td class="py-3 px-3 text-right font-semibold text-gray-700">
+                <td class="py-3 px-3 text-right font-semibold text-white">
                   {{ item.salesCount?.toLocaleString() }}
                 </td>
-                <td class="py-3 px-3 text-right font-semibold text-blue-600">
+                <td class="py-3 px-3 text-right font-semibold text-blue-400">
                   ¥{{ item.salesAmount?.toLocaleString() }}
                 </td>
                 <td class="py-3 px-3 text-center">
@@ -526,3 +526,10 @@ onMounted(() => {
     </Spin>
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-card-head-title),
+:deep(.ant-statistic-title) {
+  color: #fff !important;
+}
+</style>

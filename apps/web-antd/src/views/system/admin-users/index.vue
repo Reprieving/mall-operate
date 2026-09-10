@@ -9,11 +9,13 @@ import {
   Avatar,
   Button,
   Card,
+  Col,
   Form,
   Input,
   message,
   Modal,
   Popconfirm,
+  Row,
   Select,
   Space,
   Switch,
@@ -40,6 +42,7 @@ const queryForm = ref({
   keyword: '',
   pageNum: 1,
   pageSize: 10,
+  phone: '',
   roleId: undefined as number | undefined,
   status: undefined as number | undefined,
 });
@@ -142,8 +145,28 @@ async function fetchData() {
       adminUsers.value = res.list;
       total.value = res.total;
     } else {
-      adminUsers.value = fallbackUsers;
-      total.value = fallbackUsers.length;
+      let filtered = [...fallbackUsers];
+      if (queryForm.value.keyword) {
+        const kw = queryForm.value.keyword.toLowerCase();
+        filtered = filtered.filter(
+          (u) =>
+            u.username.toLowerCase().includes(kw) ||
+            u.nickname.toLowerCase().includes(kw) ||
+            (u.email && u.email.toLowerCase().includes(kw)),
+        );
+      }
+      if (queryForm.value.phone) {
+        const ph = queryForm.value.phone;
+        filtered = filtered.filter((u) => u.phone?.includes(ph));
+      }
+      if (queryForm.value.roleId !== undefined) {
+        filtered = filtered.filter((u) => u.roleId === queryForm.value.roleId);
+      }
+      if (queryForm.value.status !== undefined) {
+        filtered = filtered.filter((u) => u.status === queryForm.value.status);
+      }
+      adminUsers.value = filtered;
+      total.value = filtered.length;
     }
   } catch {
     adminUsers.value = fallbackUsers;
@@ -151,6 +174,15 @@ async function fetchData() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleReset() {
+  queryForm.value.keyword = '';
+  queryForm.value.phone = '';
+  queryForm.value.roleId = undefined;
+  queryForm.value.status = undefined;
+  queryForm.value.pageNum = 1;
+  fetchData();
 }
 
 function handleAdd() {
@@ -249,7 +281,7 @@ function handleResetPassword(row: any) {
       h('div', [
         h(
           'div',
-          { class: 'text-sm text-gray-600 mb-2' },
+          { class: 'text-sm text-gray-300 mb-2' },
           `重置管理员 [${row.nickname || row.username}] 的后台登录密码：`,
         ),
         h(Input.Password, {
@@ -303,34 +335,60 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page
-    description="平台运营人员账号增删改查、分配系统角色、启停控制及超级管理员重置密码"
-    title="运营管理员账号"
-  >
-    <Card class="mb-4 shadow-sm" :body-style="{ padding: '16px 24px' }">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
+  <Page>
+    <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.keyword"
             allow-clear
-            class="w-56"
-            placeholder="账号/姓名模糊检索"
+            class="w-full"
+            placeholder="管理员账号 / 姓名检索"
             @press-enter="fetchData"
           />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.phone"
+            allow-clear
+            class="w-full"
+            placeholder="联系手机号码检索"
+            @press-enter="fetchData"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Select
             v-model:value="queryForm.roleId"
             allow-clear
-            class="w-40"
-            placeholder="所属角色"
+            class="w-full"
+            placeholder="所属系统角色检索"
           >
             <Select.Option v-for="r in roles" :key="r.id" :value="r.id">
               {{ r.name }}
             </Select.Option>
           </Select>
-          <Button type="primary" @click="fetchData">查询</Button>
-        </div>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.status"
+            allow-clear
+            class="w-full"
+            placeholder="在职状态检索"
+          >
+            <Select.Option :value="1">正常在职</Select.Option>
+            <Select.Option :value="0">已停用封禁</Select.Option>
+          </Select>
+        </Col>
+      </Row>
 
-        <Button type="primary" @click="handleAdd"> 新增运营人员 </Button>
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="fetchData">查询</Button>
+          <Button @click="handleReset">重置</Button>
+        </div>
+        <Button type="primary" @click="handleAdd">+ 新增运营人员</Button>
       </div>
     </Card>
 
@@ -352,10 +410,10 @@ onMounted(() => {
             <div class="flex items-center gap-3">
               <Avatar :src="record.avatar" />
               <div>
-                <div class="font-medium text-gray-800">
+                <div class="font-medium text-white">
                   {{ record.nickname }}
                 </div>
-                <div class="text-xs text-gray-400">
+                <div class="text-xs text-gray-300">
                   账号: {{ record.username }}
                 </div>
               </div>
@@ -448,3 +506,14 @@ onMounted(() => {
     </Modal>
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>

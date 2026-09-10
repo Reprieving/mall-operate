@@ -1098,16 +1098,3 @@ const skuColumns = [
     </div>
   </Drawer>
 </template>
-
-<style scoped>
-:deep(.ant-drawer-title),
-:deep(.ant-card-head-title),
-:deep(.ant-form-item-label > label),
-:deep(.ant-table-thead > tr > th),
-:deep(.ant-table-tbody > tr > td),
-:deep(.ant-radio-wrapper),
-:deep(.ant-alert-message),
-:deep(.ant-alert-description) {
-  color: #fff !important;
-}
-</style>

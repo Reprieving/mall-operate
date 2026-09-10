@@ -1018,17 +1018,3 @@ const skuColumns = [
     </Modal>
   </Drawer>
 </template>
-
-<style scoped>
-:deep(.ant-drawer-title),
-:deep(.ant-modal-title),
-:deep(.ant-form-item-label > label),
-:deep(.ant-table-thead > tr > th),
-:deep(.ant-table-tbody > tr > td),
-:deep(.ant-tabs-tab-btn),
-:deep(.ant-radio-wrapper),
-:deep(.ant-descriptions-item-label),
-:deep(.ant-descriptions-item-content) {
-  color: #fff !important;
-}
-</style>

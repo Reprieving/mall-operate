@@ -115,7 +115,9 @@ async function loadDetail(shopId: number) {
             class="h-28 bg-cover bg-center"
             :style="{ backgroundImage: `url(${detail.shop.banner})` }"
           ></div>
-          <div class="p-4 flex items-center gap-4 bg-gray-50">
+          <div
+            class="p-4 flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg"
+          >
             <Avatar
               :size="64"
               :src="detail.shop.logo"
@@ -132,19 +134,30 @@ async function loadDetail(shopId: number) {
                 </Tag>
                 <Tag color="purple">{{ detail.shop.typeName }}</Tag>
               </div>
-              <div class="text-xs text-gray-500 mt-1 flex gap-4">
-                <span>店铺 ID: {{ detail.shop.id }}</span>
-                <span>客服电话: {{ detail.shop.phone }}</span>
-                <span>开店时间: {{ detail.shop.createTime }}</span>
+              <div class="text-xs text-gray-600 mt-1 flex gap-4">
+                <span>店铺 ID:
+                  <span class="text-gray-800 font-medium">{{
+                    detail.shop.id
+                  }}</span></span>
+                <span>客服电话:
+                  <span class="text-gray-800 font-medium">{{
+                    detail.shop.phone
+                  }}</span></span>
+                <span>开店时间:
+                  <span class="text-gray-800 font-medium">{{
+                    detail.shop.createTime
+                  }}</span></span>
               </div>
             </div>
-            <div class="text-right border-l pl-4">
-              <div class="text-xs text-gray-400">综合运营评分</div>
-              <div class="text-2xl font-bold text-amber-500 mt-0.5">
+            <div class="text-right border-l border-gray-200 pl-4">
+              <div class="text-xs text-gray-500">综合运营评分</div>
+              <div class="text-2xl font-bold text-amber-600 mt-0.5">
                 {{ detail.shop.score?.toFixed(2) }}
               </div>
               <div class="text-xs text-gray-500 mt-1">
-                在线商品: <strong>{{ detail.productCount }}</strong> 件
+                在线商品:
+                <strong class="text-gray-900">{{ detail.productCount }}</strong>
+                件
               </div>
             </div>
           </div>

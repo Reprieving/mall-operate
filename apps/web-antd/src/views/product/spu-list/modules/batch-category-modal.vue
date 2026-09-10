@@ -111,10 +111,3 @@ async function loadCategories() {
     </Form>
   </Modal>
 </template>
-
-<style scoped>
-:deep(.ant-modal-title),
-:deep(.ant-form-item-label > label) {
-  color: #fff !important;
-}
-</style>

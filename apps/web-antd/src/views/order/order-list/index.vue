@@ -8,10 +8,12 @@ import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import {
   Button,
   Card,
+  Col,
   Image,
   Input,
   message,
   Modal,
+  Row,
   Select,
   Space,
   Table,
@@ -30,14 +32,18 @@ const loading = ref(false);
 const orderList = ref<OrderVO[]>([]);
 const total = ref(0);
 
-const queryForm = ref<OrderAdminQueryDTO>({
+const queryForm = ref<
+  OrderAdminQueryDTO & { payType?: number; shopName?: string }
+>({
   adminFlag: undefined,
   deliverySn: '',
   orderSn: '',
   pageNum: 1,
   pageSize: 10,
+  payType: undefined,
   receiverName: '',
   receiverPhone: '',
+  shopName: '',
   status: undefined,
 });
 
@@ -139,8 +145,44 @@ async function fetchData() {
       orderList.value = res.list;
       total.value = res.total;
     } else {
-      orderList.value = fallbackOrders;
-      total.value = fallbackOrders.length;
+      let filtered = [...fallbackOrders];
+      if (queryForm.value.orderSn) {
+        const sn = queryForm.value.orderSn;
+        filtered = filtered.filter((o) => o.orderSn.includes(sn));
+      }
+      if (queryForm.value.receiverName) {
+        const rn = queryForm.value.receiverName;
+        filtered = filtered.filter((o) => o.receiverName.includes(rn));
+      }
+      if (queryForm.value.receiverPhone) {
+        const rp = queryForm.value.receiverPhone;
+        filtered = filtered.filter((o) => o.receiverPhone.includes(rp));
+      }
+      if (queryForm.value.deliverySn) {
+        const dsn = queryForm.value.deliverySn;
+        filtered = filtered.filter((o) => o.deliverySn?.includes(dsn));
+      }
+      if (queryForm.value.status !== undefined) {
+        filtered = filtered.filter((o) => o.status === queryForm.value.status);
+      }
+      if (queryForm.value.adminFlag !== undefined) {
+        filtered = filtered.filter(
+          (o) => o.adminFlag === queryForm.value.adminFlag,
+        );
+      }
+      if (queryForm.value.payType !== undefined) {
+        filtered = filtered.filter(
+          (o) => o.payType === queryForm.value.payType,
+        );
+      }
+      if (queryForm.value.shopName) {
+        const sName = queryForm.value.shopName.toLowerCase();
+        filtered = filtered.filter((o) =>
+          (o as any).shopName?.toLowerCase().includes(sName),
+        );
+      }
+      orderList.value = filtered;
+      total.value = filtered.length;
     }
   } catch {
     orderList.value = fallbackOrders;
@@ -162,6 +204,8 @@ function handleReset() {
   queryForm.value.deliverySn = '';
   queryForm.value.status = undefined;
   queryForm.value.adminFlag = undefined;
+  queryForm.value.payType = undefined;
+  queryForm.value.shopName = '';
   queryForm.value.pageNum = 1;
   fetchData();
 }
@@ -211,7 +255,7 @@ function handleCloseOrder(row: any) {
       h('div', [
         h(
           'div',
-          { class: 'text-sm text-gray-500 mb-2' },
+          { class: 'text-sm text-gray-300 mb-2' },
           `关闭订单 [${row.orderSn}] 并释放商品库存，请输入关单/退款原因：`,
         ),
         h(Input.TextArea, {
@@ -268,68 +312,105 @@ fetchData();
 </script>
 
 <template>
-  <Page
-    description="全平台跨店铺订单多维检索、插旗标色追踪、流转日志溯源、协助修改收件人及履约出库关单"
-    title="订单调度大盘"
-  >
+  <Page>
     <!-- 高级检索栏 -->
     <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
-      <div class="flex flex-wrap items-center gap-3">
-        <Input
-          v-model:value="queryForm.orderSn"
-          allow-clear
-          class="w-52"
-          placeholder="订单编号检索"
-          @press-enter="handleSearch"
-        />
-        <Input
-          v-model:value="queryForm.receiverName"
-          allow-clear
-          class="w-36"
-          placeholder="收货人姓名"
-          @press-enter="handleSearch"
-        />
-        <Input
-          v-model:value="queryForm.receiverPhone"
-          allow-clear
-          class="w-36"
-          placeholder="收货人电话"
-          @press-enter="handleSearch"
-        />
-        <Input
-          v-model:value="queryForm.deliverySn"
-          allow-clear
-          class="w-44"
-          placeholder="物流运单号"
-          @press-enter="handleSearch"
-        />
-        <Select
-          v-model:value="queryForm.status"
-          allow-clear
-          class="w-32"
-          placeholder="订单状态"
-        >
-          <Select.Option :value="0">待付款</Select.Option>
-          <Select.Option :value="1">待发货</Select.Option>
-          <Select.Option :value="2">已发货</Select.Option>
-          <Select.Option :value="3">已完成</Select.Option>
-          <Select.Option :value="4">已关闭</Select.Option>
-        </Select>
-        <Select
-          v-model:value="queryForm.adminFlag"
-          allow-clear
-          class="w-32"
-          placeholder="插旗颜色"
-        >
-          <Select.Option :value="1">🚩 红旗 (加急)</Select.Option>
-          <Select.Option :value="2">🚩 黄旗 (催单)</Select.Option>
-          <Select.Option :value="3">🚩 绿旗 (正常)</Select.Option>
-          <Select.Option :value="4">🚩 蓝旗 (特殊)</Select.Option>
-          <Select.Option :value="5">🚩 紫旗 (VIP)</Select.Option>
-          <Select.Option :value="0">🏳️ 无标记</Select.Option>
-        </Select>
-        <Button type="primary" @click="handleSearch">检索</Button>
-        <Button @click="handleReset">重置</Button>
+      <!-- 1行4个检索输入框 (共2行8个维度) -->
+      <Row :gutter="[16, 16]">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.orderSn"
+            allow-clear
+            class="w-full"
+            placeholder="订单编号检索"
+            @press-enter="handleSearch"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.receiverName"
+            allow-clear
+            class="w-full"
+            placeholder="收货人姓名检索"
+            @press-enter="handleSearch"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.receiverPhone"
+            allow-clear
+            class="w-full"
+            placeholder="收货人手机号检索"
+            @press-enter="handleSearch"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.deliverySn"
+            allow-clear
+            class="w-full"
+            placeholder="物流快递单号检索"
+            @press-enter="handleSearch"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.status"
+            allow-clear
+            class="w-full"
+            placeholder="订单流转状态检索"
+          >
+            <Select.Option :value="0">待买家付款</Select.Option>
+            <Select.Option :value="1">待履约发货</Select.Option>
+            <Select.Option :value="2">已出库发货</Select.Option>
+            <Select.Option :value="3">已签收完成</Select.Option>
+            <Select.Option :value="4">已售后关闭</Select.Option>
+          </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.adminFlag"
+            allow-clear
+            class="w-full"
+            placeholder="运营插旗标色检索"
+          >
+            <Select.Option :value="1">🚩 红旗 (加急发货)</Select.Option>
+            <Select.Option :value="2">🚩 黄旗 (催单排查)</Select.Option>
+            <Select.Option :value="3">🚩 绿旗 (正常顺畅)</Select.Option>
+            <Select.Option :value="4">🚩 蓝旗 (特殊要求)</Select.Option>
+            <Select.Option :value="5">🚩 紫旗 (VIP买家)</Select.Option>
+            <Select.Option :value="0">🏳️ 无标记</Select.Option>
+          </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.payType"
+            allow-clear
+            class="w-full"
+            placeholder="支付结算方式检索"
+          >
+            <Select.Option :value="1">微信支付</Select.Option>
+            <Select.Option :value="2">支付宝</Select.Option>
+            <Select.Option :value="3">网银/其他</Select.Option>
+          </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.shopName"
+            allow-clear
+            class="w-full"
+            placeholder="所属商户名称检索"
+            @press-enter="handleSearch"
+          />
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="handleSearch">检索</Button>
+          <Button @click="handleReset">重置</Button>
+        </div>
       </div>
     </Card>
 
@@ -395,7 +476,7 @@ fetchData();
                 >
                   {{ record.orderSn }}
                 </div>
-                <div class="text-xs text-gray-400 mt-0.5">
+                <div class="text-xs text-gray-300 mt-0.5">
                   {{ record.createTime }}
                 </div>
               </div>
@@ -405,12 +486,12 @@ fetchData();
           <!-- 收件人 -->
           <template v-else-if="column.key === 'receiver'">
             <div>
-              <div class="font-medium text-gray-800">
+              <div class="font-medium text-white">
                 {{ record.receiverName }}
-                <span class="text-xs text-gray-500 font-normal">({{ record.receiverPhone }})</span>
+                <span class="text-xs text-gray-300 font-normal">({{ record.receiverPhone }})</span>
               </div>
               <div
-                class="text-xs text-gray-400 mt-0.5 line-clamp-1"
+                class="text-xs text-gray-300 mt-0.5 line-clamp-1"
                 :title="`${record.receiverProvince}${record.receiverCity}${record.receiverDistrict}${record.receiverDetailAddress}`"
               >
                 {{ record.receiverProvince }}{{ record.receiverCity
@@ -426,7 +507,7 @@ fetchData();
               <div class="text-red-500 font-bold">
                 ¥{{ record.payAmount?.toFixed(2) }}
               </div>
-              <div class="text-xs text-gray-400">
+              <div class="text-xs text-gray-300">
                 {{
                   record.payType === 1
                     ? '微信'
@@ -448,14 +529,14 @@ fetchData();
           <!-- 履约物流 -->
           <template v-else-if="column.key === 'logistics'">
             <div v-if="record.deliverySn">
-              <div class="text-xs font-medium text-gray-700">
+              <div class="text-xs font-medium text-gray-200">
                 {{ record.deliveryCompany }}
               </div>
               <div class="text-xs text-blue-600 font-mono">
                 {{ record.deliverySn }}
               </div>
             </div>
-            <span v-else class="text-xs text-gray-400">未发货出库</span>
+            <span v-else class="text-xs text-gray-300">未发货出库</span>
           </template>
 
           <!-- 操作 -->
@@ -512,3 +593,14 @@ fetchData();
     <ReceiverModal @success="fetchData" />
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>

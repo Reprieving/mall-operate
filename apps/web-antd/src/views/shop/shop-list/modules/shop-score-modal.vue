@@ -55,7 +55,7 @@ const [Modal, modalApi] = useVbenModal({
 <template>
   <Modal class="w-[460px]">
     <div
-      class="mb-4 text-sm text-gray-600 bg-blue-50 border border-blue-200 p-3 rounded"
+      class="mb-4 text-sm text-white bg-blue-900/40 border border-blue-700 p-3 rounded"
     >
       正在为商户 [<strong>{{ shopName }}</strong>] 人工核准与微调综合运营服务评分：
     </div>

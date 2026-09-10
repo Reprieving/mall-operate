@@ -57,7 +57,7 @@ export async function getUserAddressesApi(id: number) {
  * 多条件分页查询主体实名认证审核列表
  */
 export async function pageCertificationsApi(params: CertQueryDTO) {
-  return requestClient.get<CommonPage<UserCertVO>>('/user/cert/page', {
+  return requestClient.get<CommonPage<UserCertVO>>('/admin/cert/page', {
     params,
   });
 }
@@ -66,14 +66,14 @@ export async function pageCertificationsApi(params: CertQueryDTO) {
  * 按用户ID查询认证信息
  */
 export async function getCertByUserIdApi(userId: number) {
-  return requestClient.get<UserCertVO>(`/user/cert/${userId}`);
+  return requestClient.get<UserCertVO>(`/admin/cert/${userId}`);
 }
 
 /**
  * 审批主体实名认证申请 (1: 通过, 2: 驳回)
  */
 export async function auditCertificationApi(data: CertAuditDTO) {
-  return requestClient.post<UserCertVO>('/user/cert/audit', data);
+  return requestClient.post<UserCertVO>('/admin/cert/audit', data);
 }
 
 /**

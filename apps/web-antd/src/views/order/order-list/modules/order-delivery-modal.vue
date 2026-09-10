@@ -65,7 +65,7 @@ const [Modal, modalApi] = useVbenModal({
 <template>
   <Modal class="w-[480px]">
     <div
-      class="mb-4 text-sm text-gray-600 bg-blue-50 border border-blue-200 p-3 rounded"
+      class="mb-4 text-sm text-white bg-blue-900/40 border border-blue-700 p-3 rounded"
     >
       正在为待发货订单 [<strong>{{ orderSn }}</strong>] 执行出库发货操作：
     </div>

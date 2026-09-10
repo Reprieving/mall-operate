@@ -13,6 +13,13 @@ export default defineConfig(async () => {
             target: 'http://localhost:8080',
             ws: true,
           },
+          '/admin': {
+            changeOrigin: true,
+            // 保持 /admin 前缀，直接转发给后端的 /admin 接口
+            rewrite: (path) => path,
+            target: 'http://localhost:8080',
+            ws: true,
+          },
         },
       },
     },

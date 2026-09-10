@@ -10,7 +10,9 @@ import {
   Badge,
   Button,
   Card,
+  Col,
   Input,
+  Row,
   Select,
   Table,
   Tag,
@@ -84,8 +86,25 @@ async function fetchData() {
       auditList.value = res.list;
       total.value = res.total;
     } else {
-      auditList.value = fallbackAudits;
-      total.value = fallbackAudits.length;
+      let filtered = [...fallbackAudits];
+      if (queryForm.value.name) {
+        const nameVal = queryForm.value.name.toLowerCase();
+        filtered = filtered.filter((s) =>
+          s.name.toLowerCase().includes(nameVal),
+        );
+      }
+      if (queryForm.value.phone) {
+        const phoneVal = queryForm.value.phone;
+        filtered = filtered.filter((s) => s.phone.includes(phoneVal));
+      }
+      if (queryForm.value.type !== undefined) {
+        filtered = filtered.filter((s) => s.type === queryForm.value.type);
+      }
+      if (queryForm.value.status !== undefined) {
+        filtered = filtered.filter((s) => s.status === queryForm.value.status);
+      }
+      auditList.value = filtered;
+      total.value = filtered.length;
     }
   } catch {
     auditList.value = fallbackAudits;
@@ -93,6 +112,15 @@ async function fetchData() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleReset() {
+  queryForm.value.name = '';
+  queryForm.value.phone = '';
+  queryForm.value.type = undefined;
+  queryForm.value.status = 0;
+  queryForm.value.pageNum = 1;
+  fetchData();
 }
 
 function handleOpenAudit(row: any) {
@@ -121,30 +149,60 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page
-    description="运营人员核查商家主体资质、营业执照及开店经营类型，执行入驻审批通过或驳回并记录审核原因"
-    title="入驻开店审核"
-  >
-    <Card class="mb-4 shadow-sm" :body-style="{ padding: '16px 24px' }">
-      <div class="flex items-center gap-3">
-        <Input
-          v-model:value="queryForm.name"
-          allow-clear
-          class="w-56"
-          placeholder="店铺名称"
-          @press-enter="fetchData"
-        />
-        <Select
-          v-model:value="queryForm.status"
-          allow-clear
-          class="w-36"
-          placeholder="审核状态"
-        >
-          <Select.Option :value="0">待审核申请</Select.Option>
-          <Select.Option :value="1">已审核通过</Select.Option>
-          <Select.Option :value="2">已驳回申请</Select.Option>
-        </Select>
-        <Button type="primary" @click="fetchData">查询</Button>
+  <Page>
+    <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.name"
+            allow-clear
+            class="w-full"
+            placeholder="拟开办店铺名称检索"
+            @press-enter="fetchData"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.phone"
+            allow-clear
+            class="w-full"
+            placeholder="申请人联系电话检索"
+            @press-enter="fetchData"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.type"
+            allow-clear
+            class="w-full"
+            placeholder="拟经营类型检索"
+          >
+            <Select.Option :value="1">个体精品店</Select.Option>
+            <Select.Option :value="2">品牌旗舰店</Select.Option>
+            <Select.Option :value="3">企业直营店</Select.Option>
+          </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="queryForm.status"
+            allow-clear
+            class="w-full"
+            placeholder="入驻审核状态检索"
+          >
+            <Select.Option :value="0">待审核申请</Select.Option>
+            <Select.Option :value="1">已审核通过</Select.Option>
+            <Select.Option :value="2">已驳回申请</Select.Option>
+          </Select>
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="fetchData">查询</Button>
+          <Button @click="handleReset">重置</Button>
+        </div>
       </div>
     </Card>
 
@@ -171,8 +229,8 @@ onMounted(() => {
                 class="border"
               />
               <div>
-                <div class="font-medium text-gray-800">{{ record.name }}</div>
-                <div class="text-xs text-gray-400">
+                <div class="font-medium text-white">{{ record.name }}</div>
+                <div class="text-xs text-gray-300">
                   申请人 ID: {{ record.userId }}
                 </div>
               </div>
@@ -215,3 +273,15 @@ onMounted(() => {
     <AuditModal @success="fetchData" />
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell),
+:deep(.ant-badge-status-text) {
+  color: #fff !important;
+}
+</style>

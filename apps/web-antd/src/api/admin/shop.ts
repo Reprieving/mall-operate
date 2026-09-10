@@ -14,7 +14,7 @@ import { requestClient } from '#/api/request';
  * 运营端分页检索店铺
  */
 export async function pageAdminShopsApi(params: ShopQueryDTO) {
-  return requestClient.get<CommonPage<ShopVO>>('/shop/admin/page', {
+  return requestClient.get<CommonPage<ShopVO>>('/api/shop/admin/page', {
     params,
   });
 }
@@ -23,7 +23,7 @@ export async function pageAdminShopsApi(params: ShopQueryDTO) {
  * 查询店铺资质审核详情
  */
 export async function getAdminShopDetailApi(id: number) {
-  return requestClient.get<ShopDetailVO>(`/shop/admin/${id}`);
+  return requestClient.get<ShopDetailVO>(`/api/shop/admin/${id}`);
 }
 
 /**
@@ -39,14 +39,14 @@ export async function getShopFullDetailApi(id: number) {
  * 审批开店申请 (1-通过, 2-驳回)
  */
 export async function auditShopApi(data: ShopAuditDTO) {
-  return requestClient.post<ShopDetailVO>('/shop/admin/audit', data);
+  return requestClient.post<ShopDetailVO>('/api/shop/admin/audit', data);
 }
 
 /**
  * 管控店铺状态 (1-正常, 3-封禁)
  */
 export async function updateAdminShopStatusApi(id: number, status: number) {
-  return requestClient.put(`/shop/admin/${id}/status`, undefined, {
+  return requestClient.put(`/api/shop/admin/${id}/status`, undefined, {
     params: { status },
   });
 }

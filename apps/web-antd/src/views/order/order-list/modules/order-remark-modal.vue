@@ -56,7 +56,7 @@ const [Modal, modalApi] = useVbenModal({
 
 <template>
   <Modal class="w-[520px]">
-    <div class="mb-3 text-sm text-gray-600">
+    <div class="mb-3 text-sm text-gray-300">
       正在为订单 [<strong>{{ orderSn }}</strong>] 设置内部流转标色与备忘信息：
     </div>
 

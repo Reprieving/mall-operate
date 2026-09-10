@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { StockWarningVO } from '#/api/admin/model';
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
@@ -9,8 +9,12 @@ import {
   Alert,
   Button,
   Card,
+  Col,
   Image,
+  Input,
   InputNumber,
+  Row,
+  Select,
   Table,
   Tag,
 } from 'ant-design-vue';
@@ -21,6 +25,9 @@ import SpuDetailDrawer from '../spu-list/modules/spu-detail-drawer.vue';
 
 const loading = ref(false);
 const threshold = ref<number>(10);
+const searchKeyword = ref('');
+const searchShop = ref('');
+const searchLevel = ref<number | undefined>(undefined);
 const warningList = ref<StockWarningVO[]>([]);
 
 const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
@@ -87,6 +94,40 @@ async function fetchData() {
   }
 }
 
+const displayedList = computed(() => {
+  let list = warningList.value;
+  if (searchKeyword.value) {
+    const kw = searchKeyword.value.toLowerCase();
+    list = list.filter(
+      (item) =>
+        item.spuName.toLowerCase().includes(kw) ||
+        item.spuCode.toLowerCase().includes(kw),
+    );
+  }
+  if (searchShop.value) {
+    const kw = searchShop.value.toLowerCase();
+    list = list.filter((item) => item.shopName.toLowerCase().includes(kw));
+  }
+  if (searchLevel.value !== undefined) {
+    if (searchLevel.value === 0) {
+      list = list.filter((item) => item.totalStock === 0);
+    } else if (searchLevel.value === 1) {
+      list = list.filter((item) => item.totalStock > 0 && item.totalStock <= 5);
+    } else if (searchLevel.value === 2) {
+      list = list.filter((item) => item.totalStock > 5);
+    }
+  }
+  return list;
+});
+
+function handleReset() {
+  searchKeyword.value = '';
+  threshold.value = 10;
+  searchShop.value = '';
+  searchLevel.value = undefined;
+  fetchData();
+}
+
 function handleOpenSpu(spuId: number) {
   detailDrawerApi.setData({ spuId });
   detailDrawerApi.open();
@@ -119,10 +160,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page
-    description="筛选全平台总库存低于警戒阈值的在售商品，按库存升序排查并及时预警补货"
-    title="库存告急预警大盘"
-  >
+  <Page>
     <Alert
       class="mb-4 shadow-sm"
       message="库存警戒策略：当商品全量 SKU 汇总可用库存低于阈值时，自动纳入预警大盘，请督促对应商家及时入库或调优分配！"
@@ -131,17 +169,55 @@ onMounted(() => {
     />
 
     <!-- 工具栏 -->
-    <Card class="mb-4 shadow-sm" :body-style="{ padding: '16px 24px' }">
-      <div class="flex items-center gap-4">
-        <span class="text-sm text-gray-700">库存警戒阈值 (件)：</span>
-        <InputNumber
-          v-model:value="threshold"
-          :max="100"
-          :min="1"
-          class="w-32"
-          @change="fetchData"
-        />
-        <Button type="primary" @click="fetchData">刷新大盘</Button>
+    <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="searchKeyword"
+            allow-clear
+            class="w-full"
+            placeholder="商品名称 / SPU 编码检索"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <InputNumber
+            v-model:value="threshold"
+            :max="100"
+            :min="1"
+            class="w-full"
+            placeholder="警戒阈值 (件)"
+            @change="fetchData"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="searchShop"
+            allow-clear
+            class="w-full"
+            placeholder="所属商户店铺名称检索"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="searchLevel"
+            allow-clear
+            class="w-full"
+            placeholder="预警紧急程度过滤"
+          >
+            <Select.Option :value="0">已完全售罄 (0 件)</Select.Option>
+            <Select.Option :value="1">严重告急 (1~5 件)</Select.Option>
+            <Select.Option :value="2">轻度预警 (6~10 件)</Select.Option>
+          </Select>
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="fetchData">查询 / 刷新大盘</Button>
+          <Button @click="handleReset">重置</Button>
+        </div>
       </div>
     </Card>
 
@@ -149,7 +225,7 @@ onMounted(() => {
     <Card class="shadow-sm">
       <Table
         :columns="columns"
-        :data-source="warningList"
+        :data-source="displayedList"
         :loading="loading"
         :pagination="{ pageSize: 10 }"
         row-key="spuId"
@@ -165,12 +241,12 @@ onMounted(() => {
               />
               <div>
                 <div
-                  class="font-medium text-gray-800 line-clamp-1 hover:text-blue-600 cursor-pointer"
+                  class="font-medium text-white line-clamp-1 hover:text-blue-400 cursor-pointer"
                   @click="handleOpenSpu(record.spuId)"
                 >
                   {{ record.spuName }}
                 </div>
-                <div class="text-xs text-gray-400">
+                <div class="text-xs text-gray-300">
                   编码: {{ record.spuCode }}
                 </div>
               </div>
@@ -194,7 +270,7 @@ onMounted(() => {
               class="text-red-600 font-bold text-base flex items-center gap-1"
             >
               {{ record.totalStock }}
-              <span class="text-xs font-normal text-gray-500">件</span>
+              <span class="text-xs font-normal text-gray-300">件</span>
             </span>
           </template>
 
@@ -220,3 +296,14 @@ onMounted(() => {
     <DetailDrawer />
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>

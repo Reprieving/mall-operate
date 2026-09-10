@@ -9,8 +9,10 @@ import {
   Badge,
   Button,
   Card,
+  Col,
   Input,
   message,
+  Row,
   Select,
   Space,
   Table,
@@ -26,8 +28,9 @@ const certList = ref<UserCertVO[]>([]);
 const total = ref(0);
 const selectedRowKeys = ref<number[]>([]);
 
-const queryForm = ref<CertQueryDTO>({
+const queryForm = ref<CertQueryDTO & { idCard?: string }>({
   certType: undefined,
+  idCard: '',
   keyword: '',
   pageNum: 1,
   pageSize: 10,
@@ -115,8 +118,34 @@ async function fetchData() {
       certList.value = res.list;
       total.value = res.total;
     } else {
-      certList.value = fallbackCerts;
-      total.value = fallbackCerts.length;
+      let filtered = [...fallbackCerts];
+      if (queryForm.value.keyword) {
+        const kw = queryForm.value.keyword.toLowerCase();
+        filtered = filtered.filter(
+          (c) =>
+            c.realName.toLowerCase().includes(kw) ||
+            (c.companyName && c.companyName.toLowerCase().includes(kw)),
+        );
+      }
+      if (queryForm.value.idCard) {
+        const idkw = queryForm.value.idCard.toLowerCase();
+        filtered = filtered.filter(
+          (c) =>
+            c.idCard.toLowerCase().includes(idkw) ||
+            (c.businessLicenseNo &&
+              c.businessLicenseNo.toLowerCase().includes(idkw)),
+        );
+      }
+      if (queryForm.value.certType !== undefined) {
+        filtered = filtered.filter(
+          (c) => c.certType === queryForm.value.certType,
+        );
+      }
+      if (queryForm.value.status !== undefined) {
+        filtered = filtered.filter((c) => c.status === queryForm.value.status);
+      }
+      certList.value = filtered;
+      total.value = filtered.length;
     }
   } catch {
     certList.value = fallbackCerts;
@@ -133,9 +162,10 @@ function handleSearch() {
 
 function handleReset() {
   queryForm.value.certType = undefined;
-  queryForm.value.status = undefined;
+  queryForm.value.idCard = '';
   queryForm.value.keyword = '';
   queryForm.value.pageNum = 1;
+  queryForm.value.status = undefined;
   fetchData();
 }
 
@@ -218,41 +248,58 @@ fetchData();
 </script>
 
 <template>
-  <Page
-    description="对用户个人、个体工商户、企业主体三类实名认证资质进行审核核验与批量审批通过/驳回"
-    title="主体实名认证审批"
-  >
+  <Page>
     <!-- 筛选过滤 -->
     <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.keyword"
             allow-clear
-            class="w-64"
-            placeholder="姓名/企业字号/证件号检索"
+            class="w-full"
+            placeholder="申请人姓名 / 企业字号检索"
             @press-enter="handleSearch"
           />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.idCard"
+            allow-clear
+            class="w-full"
+            placeholder="身份证件号 / 统一代码检索"
+            @press-enter="handleSearch"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Select
             v-model:value="queryForm.certType"
             allow-clear
-            class="w-40"
-            placeholder="认证类型"
+            class="w-full"
+            placeholder="主体认证类型检索"
           >
             <Select.Option :value="1">个人实名认证</Select.Option>
             <Select.Option :value="2">个体工商户认证</Select.Option>
             <Select.Option :value="3">企业主体认证</Select.Option>
           </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Select
             v-model:value="queryForm.status"
             allow-clear
-            class="w-36"
-            placeholder="审核状态"
+            class="w-full"
+            placeholder="审核决策状态检索"
           >
-            <Select.Option :value="0">待审核</Select.Option>
-            <Select.Option :value="1">审核通过</Select.Option>
-            <Select.Option :value="2">已驳回</Select.Option>
+            <Select.Option :value="0">待审核申请</Select.Option>
+            <Select.Option :value="1">已审核通过</Select.Option>
+            <Select.Option :value="2">已驳回申请</Select.Option>
           </Select>
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
           <Button type="primary" @click="handleSearch">查询</Button>
           <Button @click="handleReset">重置</Button>
         </div>
@@ -306,10 +353,10 @@ fetchData();
           <!-- 主体信息 -->
           <template v-else-if="column.key === 'subject'">
             <div>
-              <div class="font-medium text-gray-800">{{ record.realName }}</div>
+              <div class="font-medium text-white">{{ record.realName }}</div>
               <div
                 v-if="record.companyName"
-                class="text-xs text-gray-500 mt-0.5"
+                class="text-xs text-gray-300 mt-0.5"
               >
                 企业: {{ record.companyName }}
               </div>
@@ -319,12 +366,12 @@ fetchData();
           <!-- 证件/代码 -->
           <template v-else-if="column.key === 'idCard'">
             <div>
-              <div class="text-xs text-gray-700">
+              <div class="text-xs text-gray-200">
                 身份证: {{ record.idCard }}
               </div>
               <div
                 v-if="record.businessLicenseNo"
-                class="text-xs text-gray-400 mt-0.5"
+                class="text-xs text-gray-300 mt-0.5"
               >
                 税号: {{ record.businessLicenseNo }}
               </div>
@@ -365,3 +412,15 @@ fetchData();
     <AuditModal @success="fetchData" />
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell),
+:deep(.ant-badge-status-text) {
+  color: #fff !important;
+}
+</style>

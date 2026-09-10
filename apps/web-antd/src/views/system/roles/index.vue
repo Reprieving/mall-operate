@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { RoleVO } from '#/api/admin/model';
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
@@ -9,12 +9,15 @@ import {
   Button,
   Card,
   Checkbox,
+  Col,
   Divider,
   Form,
   Input,
   message,
   Modal,
   Popconfirm,
+  Row,
+  Select,
   Space,
   Table,
   Tag,
@@ -112,6 +115,51 @@ async function loadRoles() {
   }
 }
 
+const searchName = ref('');
+const searchCode = ref('');
+const searchStatus = ref<number | undefined>(undefined);
+const searchPermission = ref('');
+
+const displayedRoles = computed(() => {
+  return roleList.value.filter((role) => {
+    if (
+      searchName.value.trim() &&
+      !role.name.toLowerCase().includes(searchName.value.trim().toLowerCase())
+    ) {
+      return false;
+    }
+    if (
+      searchCode.value.trim() &&
+      !role.code.toLowerCase().includes(searchCode.value.trim().toLowerCase())
+    ) {
+      return false;
+    }
+    if (
+      searchStatus.value !== undefined &&
+      role.status !== searchStatus.value
+    ) {
+      return false;
+    }
+    if (
+      searchPermission.value.trim() &&
+      !role.permissions.some((p) =>
+        p.toLowerCase().includes(searchPermission.value.trim().toLowerCase()),
+      )
+    ) {
+      return false;
+    }
+    return true;
+  });
+});
+
+function handleReset() {
+  searchName.value = '';
+  searchCode.value = '';
+  searchStatus.value = undefined;
+  searchPermission.value = '';
+  loadRoles();
+}
+
 function handleAdd() {
   isEdit.value = false;
   editId.value = undefined;
@@ -194,24 +242,70 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page
-    description="配置系统 RBAC 运营角色与操作权限标识列表，支持细粒度权限管控"
-    title="角色与 RBAC 权限管理"
-  >
-    <Card class="mb-4 shadow-sm" :body-style="{ padding: '16px 24px' }">
-      <div class="flex items-center justify-between">
-        <div class="text-sm text-gray-500">
-          权限规则：超级管理员拥有全量接口权限标识
-          <code>*:*:*</code>，其他业务角色可按模块精细化授权。
+  <Page>
+    <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="searchName"
+            allow-clear
+            class="w-full"
+            placeholder="角色名称检索"
+            @press-enter="loadRoles"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="searchCode"
+            allow-clear
+            class="w-full"
+            placeholder="角色唯一编码检索"
+            @press-enter="loadRoles"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="searchStatus"
+            allow-clear
+            class="w-full"
+            placeholder="角色状态检索"
+          >
+            <Select.Option :value="1">正常启用</Select.Option>
+            <Select.Option :value="0">已禁用</Select.Option>
+          </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="searchPermission"
+            allow-clear
+            class="w-full"
+            placeholder="权限标识检索 (如 product:read)"
+            @press-enter="loadRoles"
+          />
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="loadRoles">查询</Button>
+          <Button @click="handleReset">重置</Button>
         </div>
-        <Button type="primary" @click="handleAdd"> 创建新角色 </Button>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-gray-300">
+            权限规则：超级管理员拥有全量接口权限标识
+            <code>*:*:*</code>，其他业务角色可按模块精细化授权。
+          </span>
+          <Button type="primary" @click="handleAdd">+ 创建新角色</Button>
+        </div>
       </div>
     </Card>
 
     <Card class="shadow-sm">
       <Table
         :columns="columns"
-        :data-source="roleList"
+        :data-source="displayedRoles"
         :loading="loading"
         :pagination="false"
         row-key="id"
@@ -304,3 +398,14 @@ onMounted(() => {
     </Modal>
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>

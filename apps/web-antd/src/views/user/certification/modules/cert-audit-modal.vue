@@ -130,9 +130,7 @@ const [Modal, modalApi] = useVbenModal({
       </Descriptions>
 
       <div>
-        <div class="text-sm font-medium text-gray-700 mb-2">
-          证照影印件核验：
-        </div>
+        <div class="text-sm font-medium text-white mb-2">证照影印件核验：</div>
         <div class="flex gap-4">
           <div v-if="currentCert.idCardFrontPic" class="text-center">
             <Image
@@ -140,7 +138,7 @@ const [Modal, modalApi] = useVbenModal({
               :width="160"
               class="rounded border object-cover h-28"
             />
-            <div class="text-xs text-gray-400 mt-1">身份证人像面</div>
+            <div class="text-xs text-gray-300 mt-1">身份证人像面</div>
           </div>
           <div v-if="currentCert.idCardBackPic" class="text-center">
             <Image
@@ -148,7 +146,7 @@ const [Modal, modalApi] = useVbenModal({
               :width="160"
               class="rounded border object-cover h-28"
             />
-            <div class="text-xs text-gray-400 mt-1">身份证国徽面</div>
+            <div class="text-xs text-gray-300 mt-1">身份证国徽面</div>
           </div>
           <div v-if="currentCert.businessLicensePic" class="text-center">
             <Image
@@ -156,7 +154,7 @@ const [Modal, modalApi] = useVbenModal({
               :width="160"
               class="rounded border object-cover h-28"
             />
-            <div class="text-xs text-gray-400 mt-1">营业执照影印件</div>
+            <div class="text-xs text-gray-300 mt-1">营业执照影印件</div>
           </div>
         </div>
       </div>

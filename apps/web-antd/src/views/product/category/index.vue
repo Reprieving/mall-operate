@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import type { CategoryTreeVO } from '#/api/admin/model';
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
 import {
   Button,
   Card,
+  Col,
   Form,
   Input,
   InputNumber,
@@ -15,6 +16,8 @@ import {
   Modal,
   Popconfirm,
   Radio,
+  Row,
+  Select,
   Space,
   Switch,
   Table,
@@ -31,6 +34,59 @@ import {
 
 const loading = ref(false);
 const treeData = ref<CategoryTreeVO[]>([]);
+
+const searchKeyword = ref('');
+const searchId = ref<number | undefined>(undefined);
+const searchLevel = ref<number | undefined>(undefined);
+const searchStatus = ref<number | undefined>(undefined);
+
+function filterNode(node: CategoryTreeVO): CategoryTreeVO | null {
+  const matchKeyword =
+    !searchKeyword.value ||
+    node.name.toLowerCase().includes(searchKeyword.value.toLowerCase());
+  const matchId = searchId.value === undefined || node.id === searchId.value;
+  const matchLevel =
+    searchLevel.value === undefined || node.level === searchLevel.value;
+  const matchStatus =
+    searchStatus.value === undefined || node.status === searchStatus.value;
+  const selfMatch = matchKeyword && matchId && matchLevel && matchStatus;
+
+  let filteredChildren: CategoryTreeVO[] = [];
+  if (node.children && node.children.length > 0) {
+    filteredChildren = node.children
+      .map((child) => filterNode(child))
+      .filter((child): child is CategoryTreeVO => child !== null);
+  }
+
+  if (selfMatch || filteredChildren.length > 0) {
+    return {
+      ...node,
+      children: filteredChildren.length > 0 ? filteredChildren : node.children,
+    };
+  }
+  return null;
+}
+
+const displayedTree = computed(() => {
+  if (
+    !searchKeyword.value &&
+    searchId.value === undefined &&
+    searchLevel.value === undefined &&
+    searchStatus.value === undefined
+  ) {
+    return treeData.value;
+  }
+  return treeData.value
+    .map((node) => filterNode(node))
+    .filter((node): node is CategoryTreeVO => node !== null);
+});
+
+function handleReset() {
+  searchKeyword.value = '';
+  searchId.value = undefined;
+  searchLevel.value = undefined;
+  searchStatus.value = undefined;
+}
 
 // 弹窗状态
 const modalVisible = ref(false);
@@ -267,24 +323,68 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page
-    description="支持三级商品分类树状展示、新增子类目、调整展示排序及类目启停控制"
-    title="商品类目管理"
-  >
-    <Card class="mb-4 shadow-sm" :body-style="{ padding: '16px 24px' }">
-      <div class="flex items-center justify-between">
-        <div class="text-sm text-gray-500">
-          类目说明：支持最多 3 级类目层级划分，已关联 SPU
-          商品的类目将自动启用防删除保护。
+  <Page>
+    <!-- 组合检索工具栏 -->
+    <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="searchKeyword"
+            allow-clear
+            class="w-full"
+            placeholder="分类名称检索"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <InputNumber
+            v-model:value="searchId"
+            class="w-full"
+            placeholder="分类 ID 检索"
+          />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="searchLevel"
+            allow-clear
+            class="w-full"
+            placeholder="分类层级过滤"
+          >
+            <Select.Option :value="1">一级分类 (根类目)</Select.Option>
+            <Select.Option :value="2">二级分类 (子类目)</Select.Option>
+            <Select.Option :value="3">三级分类 (叶子类目)</Select.Option>
+          </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Select
+            v-model:value="searchStatus"
+            allow-clear
+            class="w-full"
+            placeholder="启用状态过滤"
+          >
+            <Select.Option :value="1">正常启用</Select.Option>
+            <Select.Option :value="0">已禁用</Select.Option>
+          </Select>
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="loadTree">查询 / 刷新</Button>
+          <Button @click="handleReset">重置</Button>
+          <span class="text-xs text-gray-300 ml-2">
+            类目划分支持最多 3 级层级，已关联 SPU 商品的类目自动防删保护。
+          </span>
         </div>
-        <Button type="primary" @click="handleAdd(0)"> 新增顶级分类 </Button>
+        <Button type="primary" @click="handleAdd(0)">+ 新增顶级分类</Button>
       </div>
     </Card>
 
     <Card class="shadow-sm">
       <Table
         :columns="columns"
-        :data-source="treeData"
+        :data-source="displayedTree"
         :loading="loading"
         :pagination="false"
         row-key="id"
@@ -379,3 +479,15 @@ onMounted(() => {
     </Modal>
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell),
+:deep(.ant-table-row-indent + .ant-table-row-expand-icon) {
+  color: #fff !important;
+}
+</style>

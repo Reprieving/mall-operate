@@ -9,9 +9,11 @@ import {
   Avatar,
   Button,
   Card,
+  Col,
   Input,
   message,
   Popconfirm,
+  Row,
   Select,
   Space,
   Switch,
@@ -210,48 +212,58 @@ fetchData();
 </script>
 
 <template>
-  <Page
-    description="全平台跨店铺监管、营业状态批量管控/违规封禁、人工核准店铺综合评分与全景详情透视"
-    title="店铺监管中心"
-  >
+  <Page>
     <!-- 过滤工具栏 -->
     <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.name"
             allow-clear
-            class="w-56"
+            class="w-full"
             placeholder="店铺名称模糊检索"
             @press-enter="handleSearch"
           />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.phone"
             allow-clear
-            class="w-40"
-            placeholder="联系电话"
+            class="w-full"
+            placeholder="店铺客服联系电话检索"
             @press-enter="handleSearch"
           />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Select
             v-model:value="queryForm.type"
             allow-clear
-            class="w-36"
-            placeholder="经营类型"
+            class="w-full"
+            placeholder="经营类型检索"
           >
             <Select.Option :value="1">个体精品店</Select.Option>
             <Select.Option :value="2">品牌旗舰店</Select.Option>
             <Select.Option :value="3">企业直营店</Select.Option>
           </Select>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Select
             v-model:value="queryForm.status"
             allow-clear
-            class="w-32"
-            placeholder="店铺状态"
+            class="w-full"
+            placeholder="店铺营业状态检索"
           >
             <Select.Option :value="1">正常营业</Select.Option>
             <Select.Option :value="2">打烊休息</Select.Option>
             <Select.Option :value="3">违规封禁</Select.Option>
           </Select>
+        </Col>
+      </Row>
+
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
           <Button type="primary" @click="handleSearch">查询</Button>
           <Button @click="handleReset">重置</Button>
         </div>
@@ -303,12 +315,12 @@ fetchData();
               />
               <div>
                 <div
-                  class="font-medium text-gray-800 line-clamp-1 hover:text-blue-600 cursor-pointer"
+                  class="font-medium text-white line-clamp-1 hover:text-blue-400 cursor-pointer"
                   @click="handleOpenDetail(record)"
                 >
                   {{ record.name }}
                 </div>
-                <div class="text-xs text-gray-400">
+                <div class="text-xs text-gray-300">
                   店主 ID: {{ record.userId }}
                 </div>
               </div>
@@ -364,3 +376,14 @@ fetchData();
     <ScoreModal @success="fetchData" />
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>

@@ -8,6 +8,7 @@ import { Page } from '@vben/common-ui';
 import {
   Button,
   Card,
+  Col,
   Form,
   Image,
   Input,
@@ -16,6 +17,7 @@ import {
   Modal,
   Popconfirm,
   Radio,
+  Row,
   Select,
   Space,
   Switch,
@@ -35,7 +37,8 @@ const loading = ref(false);
 const brandList = ref<BrandVO[]>([]);
 const total = ref(0);
 
-const queryForm = ref<BrandQueryDTO>({
+const queryForm = ref<BrandQueryDTO & { description?: string }>({
+  description: '',
   firstLetter: '',
   name: '',
   pageNum: 1,
@@ -94,8 +97,30 @@ async function fetchData() {
       brandList.value = res.list;
       total.value = res.total;
     } else {
-      brandList.value = fallbackBrands;
-      total.value = fallbackBrands.length;
+      let filtered = [...fallbackBrands];
+      if (queryForm.value.name) {
+        const nameVal = queryForm.value.name.toLowerCase();
+        filtered = filtered.filter((b) =>
+          b.name.toLowerCase().includes(nameVal),
+        );
+      }
+      if (queryForm.value.firstLetter) {
+        const letterVal = queryForm.value.firstLetter.toUpperCase();
+        filtered = filtered.filter(
+          (b) => b.firstLetter.toUpperCase() === letterVal,
+        );
+      }
+      if (queryForm.value.status !== undefined) {
+        filtered = filtered.filter((b) => b.status === queryForm.value.status);
+      }
+      if (queryForm.value.description) {
+        const descVal = queryForm.value.description.toLowerCase();
+        filtered = filtered.filter((b) =>
+          b.description?.toLowerCase().includes(descVal),
+        );
+      }
+      brandList.value = filtered;
+      total.value = filtered.length;
     }
   } catch {
     brandList.value = fallbackBrands;
@@ -103,6 +128,15 @@ async function fetchData() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleReset() {
+  queryForm.value.name = '';
+  queryForm.value.firstLetter = '';
+  queryForm.value.status = undefined;
+  queryForm.value.description = '';
+  queryForm.value.pageNum = 1;
+  fetchData();
 }
 
 function handleAdd() {
@@ -197,42 +231,59 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page
-    description="商品品牌全生命周期维护，录入品牌名、Logo 与检索首字母，与前台商品筛选深度联动"
-    title="商品品牌管理"
-  >
+  <Page>
     <!-- 筛选过滤 -->
-    <Card class="mb-4 shadow-sm" :body-style="{ padding: '16px 24px' }">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
+    <Card class="mb-4 shadow-sm" :body-style="{ padding: '18px 24px' }">
+      <!-- 1行4个检索输入框 -->
+      <Row :gutter="16">
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.name"
             allow-clear
-            class="w-56"
-            placeholder="品牌名称模糊搜索"
+            class="w-full"
+            placeholder="品牌名称模糊检索"
             @press-enter="fetchData"
           />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Input
             v-model:value="queryForm.firstLetter"
             allow-clear
-            class="w-32"
+            class="w-full"
             :maxlength="1"
-            placeholder="首字母 (A-Z)"
+            placeholder="品牌首字母检索 (A-Z)"
             @press-enter="fetchData"
           />
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
           <Select
             v-model:value="queryForm.status"
             allow-clear
-            class="w-32"
-            placeholder="状态"
+            class="w-full"
+            placeholder="品牌启用状态检索"
           >
             <Select.Option :value="1">正常启用</Select.Option>
             <Select.Option :value="0">已禁用</Select.Option>
           </Select>
-          <Button type="primary" @click="fetchData">查询</Button>
-        </div>
+        </Col>
+        <Col :xs="24" :sm="12" :md="6" :lg="6">
+          <Input
+            v-model:value="queryForm.description"
+            allow-clear
+            class="w-full"
+            placeholder="品牌故事 / 描述关键词检索"
+            @press-enter="fetchData"
+          />
+        </Col>
+      </Row>
 
-        <Button type="primary" @click="handleAdd"> 录入新品牌 </Button>
+      <!-- 操作按钮栏 -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Button type="primary" @click="fetchData">查询</Button>
+          <Button @click="handleReset">重置</Button>
+        </div>
+        <Button type="primary" @click="handleAdd">+ 录入新品牌</Button>
       </div>
     </Card>
 
@@ -339,3 +390,14 @@ onMounted(() => {
     </Modal>
   </Page>
 </template>
+
+<style scoped>
+:deep(.ant-table-thead > tr > th),
+:deep(.ant-table-tbody > tr > td),
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-pagination-total-text),
+:deep(.ant-pagination-item a),
+:deep(.ant-table-cell) {
+  color: #fff !important;
+}
+</style>
