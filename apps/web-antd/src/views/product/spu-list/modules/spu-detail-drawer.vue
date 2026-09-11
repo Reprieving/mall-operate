@@ -372,7 +372,6 @@ async function handleSaveSku() {
       } as any);
     }
     recalculateSpuStock();
-    message.success('规格与单品数据已成功同步！');
     skuModalVisible.value = false;
   }
 }
