@@ -449,6 +449,7 @@ fetchData();
           showTotal: (t: number) => `共 ${t} 件商品`,
         }"
         :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+        class="spu-main-table"
         row-key="id"
         size="middle"
       >
@@ -550,19 +551,19 @@ fetchData();
       </Table>
     </Card>
 
-    <DetailDrawer />
+    <DetailDrawer @success="fetchData" />
     <CreateDrawer @success="handleCreateSuccess" />
     <BatchCatModal @success="fetchData" />
   </Page>
 </template>
 
 <style scoped>
-:deep(.ant-table-thead > tr > th),
-:deep(.ant-table-tbody > tr > td),
-:deep(.ant-checkbox-wrapper),
-:deep(.ant-pagination-total-text),
-:deep(.ant-pagination-item a),
-:deep(.ant-table-cell),
+:deep(.spu-main-table .ant-table-thead > tr > th),
+:deep(.spu-main-table .ant-table-tbody > tr > td),
+:deep(.spu-main-table .ant-checkbox-wrapper),
+:deep(.spu-main-table .ant-pagination-total-text),
+:deep(.spu-main-table .ant-pagination-item a),
+:deep(.spu-main-table .ant-table-cell),
 :deep(.ant-page-header-heading-title),
 :deep(.ant-page-header-heading-sub-title) {
   color: #fff !important;
