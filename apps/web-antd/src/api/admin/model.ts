@@ -632,6 +632,7 @@ export interface OrderAdminDetailVO {
   buyer?: UserVO;
   shop?: ShopVO;
   timeline: OrderLogVO[];
+  refundInfo?: OrderRefundVO;
 }
 
 export interface OrderAdminQueryDTO {
@@ -669,6 +670,54 @@ export interface OrderReceiverUpdateDTO {
 
 export interface OrderCancelDTO {
   cancelReason?: string;
+}
+
+export interface OrderRefundVO {
+  id?: number;
+  refundSn?: string;
+  orderId?: number;
+  orderSn?: string;
+  shopId?: number;
+  shopName?: string;
+  userId?: number;
+  refundType?: number; // 1-仅退款, 2-退货退款
+  refundTypeDesc?: string;
+  refundAmount?: number;
+  reason?: string;
+  description?: string;
+  proofPics?: string;
+  status?: number; // 0-待审核, 1-审核通过/退款成功, 2-已驳回
+  statusDesc?: string;
+  auditTime?: string;
+  auditUserId?: number;
+  auditUserName?: string;
+  auditRemark?: string;
+  createTime?: string;
+  updateTime?: string;
+}
+
+export interface OrderRefundAuditDTO {
+  status: number; // 1-同意退款, 2-驳回退款
+  auditRemark?: string;
+}
+
+export interface OrderRefundApplyDTO {
+  refundType: number;
+  refundAmount: number;
+  reason: string;
+  description?: string;
+  proofPics?: string;
+}
+
+export interface OrderRefundQueryDTO {
+  pageNum?: number;
+  pageSize?: number;
+  orderId?: number;
+  orderSn?: string;
+  refundSn?: string;
+  status?: number;
+  shopId?: number;
+  userId?: number;
 }
 
 // --------------------------- 6. 店铺与商户监管 ---------------------------

@@ -7,6 +7,10 @@ import type {
   OrderDeliveryDTO,
   OrderLogVO,
   OrderReceiverUpdateDTO,
+  OrderRefundApplyDTO,
+  OrderRefundAuditDTO,
+  OrderRefundQueryDTO,
+  OrderRefundVO,
   OrderVO,
 } from './model';
 
@@ -80,4 +84,69 @@ export async function closeOrderApi(id: number, reason?: string) {
  */
 export async function adminCancelOrderApi(id: number, data: OrderCancelDTO) {
   return requestClient.post<OrderVO>(`/api/order/admin/${id}/cancel`, data);
+}
+
+/**
+ * 全平台退款申请分页检索
+ */
+export async function pageRefundsApi(params: OrderRefundQueryDTO) {
+  return requestClient.get<CommonPage<OrderRefundVO>>(
+    '/admin/order/refund/page',
+    {
+      params,
+    },
+  );
+}
+
+/**
+ * 查询指定订单的退款记录
+ */
+export async function getAdminOrderRefundApi(orderId: number) {
+  return requestClient.get<OrderRefundVO>(`/admin/order/${orderId}/refund`);
+}
+
+/**
+ * 审批订单退款申请 (根据退款记录 ID)
+ */
+export async function auditRefundApi(
+  refundId: number,
+  data: OrderRefundAuditDTO,
+) {
+  return requestClient.post<OrderRefundVO>(
+    `/admin/order/refund/${refundId}/audit`,
+    data,
+  );
+}
+
+/**
+ * 根据订单 ID 审批退款申请
+ */
+export async function auditRefundByOrderIdApi(
+  orderId: number,
+  data: OrderRefundAuditDTO,
+) {
+  return requestClient.post<OrderRefundVO>(
+    `/admin/order/${orderId}/refund/audit`,
+    data,
+  );
+}
+
+/**
+ * 申请订单退款 (买家端接口)
+ */
+export async function applyRefundApi(
+  orderId: number,
+  data: OrderRefundApplyDTO,
+) {
+  return requestClient.post<OrderRefundVO>(
+    `/api/order/${orderId}/refund`,
+    data,
+  );
+}
+
+/**
+ * 查询退款记录 (买家端接口)
+ */
+export async function getOrderRefundApi(orderId: number) {
+  return requestClient.get<OrderRefundVO>(`/api/order/${orderId}/refund`);
 }

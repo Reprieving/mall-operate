@@ -19,6 +19,15 @@ const routes: RouteRecordRaw[] = [
           title: '订单调度大盘',
         },
       },
+      {
+        name: 'RefundList',
+        path: 'refund-list',
+        component: () => import('#/views/order/refund-list/index.vue'),
+        meta: {
+          icon: 'lucide:rotate-ccw',
+          title: '售后退款审批',
+        },
+      },
     ],
   },
 ];

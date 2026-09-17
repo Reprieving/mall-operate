@@ -27,21 +27,31 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     baseURL,
   });
 
+  let isReAuthenticating = false;
+
   /**
    * 重新认证逻辑
    */
   async function doReAuthenticate() {
-    console.warn('Access token or refresh token is invalid or expired. ');
-    const accessStore = useAccessStore();
-    const authStore = useAuthStore();
-    accessStore.setAccessToken(null);
-    if (
-      preferences.app.loginExpiredMode === 'modal' &&
-      accessStore.isAccessChecked
-    ) {
-      accessStore.setLoginExpired(true);
-    } else {
-      await authStore.logout();
+    if (isReAuthenticating) return;
+    isReAuthenticating = true;
+    try {
+      console.warn('Access token or refresh token is invalid or expired.');
+      // 清空可能已出现的错误消息气泡
+      message.destroy();
+      const accessStore = useAccessStore();
+      const authStore = useAuthStore();
+      accessStore.setAccessToken(null);
+      if (
+        preferences.app.loginExpiredMode === 'modal' &&
+        accessStore.isAccessChecked
+      ) {
+        accessStore.setLoginExpired(true);
+      } else {
+        await authStore.logout();
+      }
+    } finally {
+      isReAuthenticating = false;
     }
   }
 
@@ -94,9 +104,23 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   // 通用的错误处理,如果没有进入上面的错误处理逻辑，就会进入这里
   client.addResponseInterceptor(
     errorMessageResponseInterceptor((msg: string, error) => {
-      // 这里可以根据业务进行定制,你可以拿到 error 内的信息进行定制化处理，根据不同的 code 做不同的提示，而不是直接使用 message.error 提示 msg
-      // 当前mock接口返回的错误字段是 error 或者 message
+      const status = error?.response?.status;
       const responseData = error?.response?.data ?? {};
+      const code = responseData?.code ?? responseData?.status;
+      const url = error?.config?.url ?? '';
+
+      // 退出登录接口即使因 Token 过期等原因报错也静默处理，避免弹出多余错误框
+      if (url.includes('/auth/logout')) {
+        return;
+      }
+
+      // 401 未授权或 Token 过期（非登录接口本身的账号密码错误），系统自动处理重新认证并跳转登录页，不弹出错误提示框
+      const isLoginUrl = url.includes('/auth/login');
+      if (!isLoginUrl && (status === 401 || code === 401)) {
+        return;
+      }
+
+      // 当前mock接口返回的错误字段是 error 或者 message
       const errorMessage = responseData?.error ?? responseData?.message ?? '';
       // 如果没有错误信息，则会根据状态码进行提示
       message.error(errorMessage || msg);

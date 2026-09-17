@@ -2,6 +2,7 @@
 import type { OrderAdminQueryDTO, OrderVO } from '#/api/admin/model';
 
 import { h, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 
@@ -28,6 +29,7 @@ import OrderDetailDrawer from './modules/order-detail-drawer.vue';
 import OrderReceiverModal from './modules/order-receiver-modal.vue';
 import OrderRemarkModal from './modules/order-remark-modal.vue';
 
+const router = useRouter();
 const loading = ref(false);
 const orderList = ref<OrderVO[]>([]);
 const total = ref(0);
@@ -410,6 +412,11 @@ fetchData();
         <div class="flex items-center gap-3">
           <Button type="primary" @click="handleSearch">检索</Button>
           <Button @click="handleReset">重置</Button>
+        </div>
+        <div>
+          <Button type="dashed" @click="router.push('/order/refund-list')">
+            🛡️ 查看售后退款审批
+          </Button>
         </div>
       </div>
     </Card>

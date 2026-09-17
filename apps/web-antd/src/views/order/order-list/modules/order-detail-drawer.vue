@@ -3,9 +3,10 @@ import type { OrderAdminDetailVO } from '#/api/admin/model';
 
 import { ref } from 'vue';
 
-import { useVbenDrawer } from '@vben/common-ui';
+import { useVbenDrawer, useVbenModal } from '@vben/common-ui';
 
 import {
+  Button,
   Card,
   Divider,
   Empty,
@@ -17,10 +18,48 @@ import {
   Timeline,
 } from 'ant-design-vue';
 
-import { getAdminOrderDetailApi } from '#/api/admin';
+import { getAdminOrderDetailApi, getAdminOrderRefundApi } from '#/api/admin';
+
+import OrderRefundAuditModal from '../../refund-list/modules/refund-audit-modal.vue';
 
 const loading = ref(false);
 const detail = ref<null | OrderAdminDetailVO>(null);
+
+const [AuditModal, auditModalApi] = useVbenModal({
+  connectedComponent: OrderRefundAuditModal,
+});
+
+function handleOpenAuditModal() {
+  if (!detail.value?.refundInfo) return;
+  const r = detail.value.refundInfo;
+  auditModalApi.setData({
+    auditRemark: r.auditRemark,
+    description: r.description,
+    orderId: r.orderId ?? detail.value.orderInfo.id,
+    orderSn: r.orderSn ?? detail.value.orderInfo.orderSn,
+    proofPics: r.proofPics,
+    reason: r.reason,
+    refundAmount: r.refundAmount,
+    refundId: r.id,
+    refundSn: r.refundSn,
+    refundTypeDesc: r.refundTypeDesc,
+  });
+  auditModalApi.open();
+}
+
+function handleAuditSuccess() {
+  if (detail.value?.orderInfo?.id) {
+    loadDetail(detail.value.orderInfo.id);
+  }
+}
+
+function parsePics(pics?: string): string[] {
+  if (!pics) return [];
+  return pics
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
 
 const [Drawer, drawerApi] = useVbenDrawer({
   footer: false,
@@ -40,6 +79,16 @@ async function loadDetail(orderId: number) {
   try {
     const res = await getAdminOrderDetailApi(orderId);
     detail.value = res;
+    if (!detail.value.refundInfo) {
+      try {
+        const refundRes = await getAdminOrderRefundApi(orderId);
+        if (refundRes && (refundRes.id || refundRes.refundSn)) {
+          detail.value.refundInfo = refundRes;
+        }
+      } catch {
+        // 该订单无退款记录，正常忽略
+      }
+    }
   } catch {
     // 模拟数据展示
     detail.value = {
@@ -188,11 +237,11 @@ const itemColumns = [
       <div v-if="detail" class="space-y-4">
         <!-- 订单状态顶栏 -->
         <div
-          class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg"
+          class="flex items-center justify-between p-4 bg-slate-800/80 border border-slate-700 rounded-lg"
         >
           <div>
             <div class="flex items-center gap-3">
-              <span class="text-base font-bold text-gray-900">订单号: {{ detail.orderInfo.orderSn }}</span>
+              <span class="text-base font-bold text-white">订单号: {{ detail.orderInfo.orderSn }}</span>
               <Tag
                 :color="statusMap[detail.orderInfo.status]?.color || 'default'"
               >
@@ -214,19 +263,19 @@ const itemColumns = [
                 紫旗特殊
               </Tag>
             </div>
-            <div class="text-xs text-gray-600 mt-1 flex gap-4">
+            <div class="text-xs text-slate-300 mt-1 flex gap-4">
               <span>下单时间:
-                <span class="text-gray-800 font-medium">{{
+                <span class="text-white font-medium">{{
                   detail.orderInfo.createTime
                 }}</span></span>
               <span v-if="detail.orderInfo.paymentTime">支付时间:
-                <span class="text-gray-800 font-medium">{{
+                <span class="text-white font-medium">{{
                   detail.orderInfo.paymentTime
                 }}</span></span>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-xs text-gray-500">应付 / 实付款</div>
+            <div class="text-xs text-slate-400">应付 / 实付款</div>
             <div class="text-2xl font-bold text-red-500 mt-0.5">
               ¥{{ detail.orderInfo.payAmount?.toFixed(2) }}
             </div>
@@ -236,9 +285,113 @@ const itemColumns = [
         <!-- 运营备注提示 -->
         <div
           v-if="detail.orderInfo.adminRemark"
-          class="p-3 bg-amber-50 border border-amber-200 rounded text-amber-800 text-sm"
+          class="p-3 bg-amber-500/10 border border-amber-500/30 rounded text-amber-300 text-sm"
         >
           <strong>运营内部备忘：</strong> {{ detail.orderInfo.adminRemark }}
+        </div>
+
+        <!-- 售后退款流转卡片 (若该订单存在退款申请) -->
+        <div
+          v-if="detail.refundInfo"
+          class="p-4 rounded-lg border border-amber-500/40 bg-amber-950/20"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-base font-bold text-amber-400">⚡ 订单售后退款申请</span>
+              <Tag v-if="detail.refundInfo.status === 0" color="warning">
+                ⏳ 待运营审批
+              </Tag>
+              <Tag v-else-if="detail.refundInfo.status === 1" color="success">
+                ✅ 审核通过 / 已退款
+              </Tag>
+              <Tag v-else-if="detail.refundInfo.status === 2" color="error">
+                ❌ 申请已被驳回
+              </Tag>
+              <Tag color="cyan">
+                {{
+                  detail.refundInfo.refundTypeDesc ||
+                  (detail.refundInfo.refundType === 2 ? '退货退款' : '仅退款')
+                }}
+              </Tag>
+            </div>
+            <Button
+              v-if="detail.refundInfo.status === 0"
+              type="primary"
+              danger
+              size="small"
+              @click="handleOpenAuditModal"
+            >
+              立即审批退款
+            </Button>
+          </div>
+
+          <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <span class="text-slate-400">退款单号：</span>
+              <span class="font-mono text-white font-medium">{{
+                detail.refundInfo.refundSn
+              }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400">申请退款金额：</span>
+              <span class="text-red-400 font-bold text-sm">¥{{ detail.refundInfo.refundAmount?.toFixed(2) }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400">申请时间：</span>
+              <span class="text-slate-300">{{
+                detail.refundInfo.createTime
+              }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400">退款原因：</span>
+              <span class="text-slate-200 font-medium">{{
+                detail.refundInfo.reason
+              }}</span>
+            </div>
+          </div>
+
+          <div
+            v-if="detail.refundInfo.description"
+            class="mt-2 text-xs text-slate-300"
+          >
+            <span class="text-slate-400">买家说明：</span>{{ detail.refundInfo.description }}
+          </div>
+
+          <!-- 凭证图片预览 -->
+          <div
+            v-if="parsePics(detail.refundInfo.proofPics).length > 0"
+            class="mt-2"
+          >
+            <span class="text-xs text-slate-400 block mb-1">售后退款凭证：</span>
+            <Image.PreviewGroup>
+              <div class="flex items-center gap-2">
+                <Image
+                  v-for="(pic, idx) in parsePics(detail.refundInfo.proofPics)"
+                  :key="idx"
+                  :src="pic"
+                  :width="48"
+                  :height="48"
+                  class="rounded border border-slate-700 object-cover"
+                />
+              </div>
+            </Image.PreviewGroup>
+          </div>
+
+          <!-- 若已审批，展示审批结果 -->
+          <div
+            v-if="detail.refundInfo.status !== 0 && detail.refundInfo.auditTime"
+            class="mt-2 pt-2 border-t border-amber-900/40 text-xs text-slate-400 flex flex-wrap items-center gap-4"
+          >
+            <span>审批人：<span class="text-slate-200">{{
+                detail.refundInfo.auditUserName || '运营管理员'
+              }}</span></span>
+            <span>审批时间：<span class="text-slate-200">{{
+                detail.refundInfo.auditTime
+              }}</span></span>
+            <span v-if="detail.refundInfo.auditRemark">审批说明：<span class="text-amber-300 font-medium">{{
+                detail.refundInfo.auditRemark
+              }}</span></span>
+          </div>
         </div>
 
         <!-- 流转关键节点步骤条 -->
@@ -387,13 +540,13 @@ const itemColumns = [
               :color="idx === 0 ? 'green' : 'blue'"
             >
               <div class="flex items-center gap-2">
-                <span class="font-bold text-gray-800 text-sm">{{
+                <span class="font-bold text-white text-sm">{{
                   log.action
                 }}</span>
-                <span class="text-xs text-gray-400">({{ log.time }})</span>
+                <span class="text-xs text-slate-400">({{ log.time }})</span>
               </div>
-              <div class="text-xs text-gray-600 mt-0.5">{{ log.detail }}</div>
-              <div class="text-xs text-gray-500 mt-0.5">
+              <div class="text-xs text-slate-300 mt-0.5">{{ log.detail }}</div>
+              <div class="text-xs text-slate-400 mt-0.5">
                 经手人: {{ log.operator }}
               </div>
             </Timeline.Item>
@@ -402,5 +555,8 @@ const itemColumns = [
       </div>
       <Empty v-else-if="!loading" description="未找到订单信息" />
     </Spin>
+
+    <!-- 审批退款弹窗 -->
+    <AuditModal @success="handleAuditSuccess" />
   </Drawer>
 </template>
